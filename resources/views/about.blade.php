@@ -1,10 +1,10 @@
-
+@include('templates.header')
         <div class="about-one section-padding">
             <div class="container">
                 <div class="row align-items-center">
                     <div class="col-lg-6">
                         <div class="service-img">
-                            <img src="images/about/1.jpg" alt="" class="img-fluid">
+                            <img src="{{asset('home/images/team/meritinfos.jpeg')}}" alt="" class="img-fluid">
                         </div>
                     </div>
                     <div class="col-lg-6">
@@ -13,7 +13,7 @@
                             <p>Founded in January of 2021, {{$web->siteName}} is a digital currency wallet and platform where
                                 merchants
                                 and consumers can transact with new digital currencies like bitcoin, ethereum, and
-                                litecoin.
+                                litecoin, including a host of others.
                                 A product of Meritinfos LLC based in Atlanta, Georgia.</p>
                             <p>{{$web->siteName}} prides herself in providing a safe and secured trading environment for both buyers
                                 and sellers to transact safely, and at the best transaction rate ever.
@@ -31,7 +31,8 @@
                     <div class="col-lg-12">
                         <div class="ceo-content">
                             <div class="media">
-                                <img src="{{asset('home/images/team/michael.jpeg')}}" alt="" class="img-fluid mr-4 rounded-circle">
+                                <img src="{{asset('home/images/team/michael.jpeg')}}" alt=""
+                                class="img-fluid mr-4 rounded-circle" style="width: 100px;">
                                 <div class="media-body">
                                     <h3>Michael Erastus</h3>
                                     <span>CEO of {{$web->siteName}}</span>
@@ -70,3 +71,4 @@
             </div>
         </div>
 
+@include('templates.footer')

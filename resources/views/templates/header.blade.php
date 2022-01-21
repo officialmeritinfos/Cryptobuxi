@@ -67,7 +67,7 @@
                                             <a class="nav-link" href="{{url('index')}}">Home</a>
                                         </li>
                                         <li class="nav-item">
-                                            <a class="nav-link" href="{{url('price')}}">Price</a>
+                                            <a class="nav-link" href="{{url('price')}}">Pricing</a>
                                         </li>
                                         <li class="nav-item">
                                             <a class="nav-link" href="{{url('wallet')}}">Wallet</a>
@@ -78,7 +78,7 @@
                                             <div class="dropdown-menu">
                                                 <a class="dropdown-item" href="{{url('about')}}">About us</a>
                                                 <a class="dropdown-item" href="{{url('team')}}">Team</a>
-                                                <a class="dropdown-item" href="blog">Blog</a>
+                                                <a class="dropdown-item" href="{{$web->blogLink}}">Blog</a>
                                                 <a class="dropdown-item" href="{{url('career')}}">Career</a>
                                             </div>
                                         </li>

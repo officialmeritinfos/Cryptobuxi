@@ -1,23 +1,23 @@
-<div class="bottom section-padding">
+<div class="bottom section-padding" style="background-color:#0437F2;color:#fff;">
     <div class="container">
         <div class="row">
             <div class="col-xl-4 col-lg-4 col-md-6 col-sm-6">
                 <div class="bottom-logo">
                     <img class="pb-3" src="{{ asset('home/images/'.$web->logo) }}" style="width:150px;">
-
-                    <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit.</p>
+                    <p style="font-size:15px;">{{$web->siteName}} is a global cryptocurrency trading platform
+                        where you can safely trade with millions of users,
+                        using 300+ payment methods. Get a free account today.</p>
                 </div>
             </div>
             <div class="col-xl-2 col-lg-2 col-md-6 col-sm-6">
                 <div class="bottom-widget">
                     <h4 class="widget-title">Company</h4>
                     <ul>
-                        <li><a href="#">About</a></li>
-                        <li><a href="#">Career</a></li>
-                        <li><a href="#">Affiliate</a></li>
-                        <li><a href="#">Legal</a></li>
-                        <li><a href="#">Privacy</a></li>
-                        <li><a href="#">AML</a></li>
+                        <li><a href="{{url('about')}}">About</a></li>
+                        <li><a href="{{url('affiliate')}}">Affiliate</a></li>
+                        <li><a href="{{url('legal')}}">Legal</a></li>
+                        <li><a href="{{url('privacy')}}">Privacy</a></li>
+                        <li><a href="{{url('aml')}}">AML</a></li>
                     </ul>
                 </div>
             </div>
@@ -25,12 +25,11 @@
                 <div class="bottom-widget">
                     <h4 class="widget-title">Support</h4>
                     <ul>
-                        <li><a href="#">Help Center</a></li>
-                        <li><a href="#">FAQ</a></li>
-                        <li><a href="#">Contact Us</a></li>
-                        <li><a href="#">Blog</a></li>
-                        <li><a href="#">Supported Crypto</a></li>
-                        <li><a href="#">Supported Countries</a></li>
+                        <li><a href="{{url('help')}}">Help Center</a></li>
+                        <li><a href="{{url('faq')}}">FAQ</a></li>
+                        <li><a href="{{url('contact')}}">Contact Us</a></li>
+                        <li><a href="{{$web->blogLink}}">Blog</a></li>
+                        <li><a href="{{url('supported_crypto')}}">Supported Crypto</a></li>
                     </ul>
                 </div>
             </div>
@@ -38,17 +37,16 @@
                 <div class="bottom-widget">
                     <h4 class="widget-title">Individual</h4>
                     <ul>
-                        <li><a href="#">Wallet</a></li>
-                        <li><a href="#">Buy and Sell</a></li>
-                        <li><a href="#">Earn Free Cryptocurrency</a></li>
-                        <li><a href="#">Lending</a></li>
-                        <li><a href="#">Peer to Peer</a></li>
+                        <li><a href="{{url('wallet')}}">Wallet</a></li>
+                        <li><a href="{{url('buy')}}">Buy and Sell</a></li>
+                        <li><a href="{{url('earn')}}">Earn Free Cryptocurrency</a></li>
+                        <li><a href="{{url('lending')}}">Lending</a></li>
                     </ul>
                 </div>
             </div>
             <div class="col-xl-2 col-lg-2 col-md-6 col-sm-6">
                 <div class="bottom-widget">
-                    <h4 class="widget-title">Some Exchange Pair</h4>
+                    <h4 class="widget-title">Exchange Pairs</h4>
                     <div class="row">
                         <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12">
                             <ul>
@@ -64,7 +62,7 @@
     </div>
 </div>
 
-<div class="footer">
+<div class="footer" style="background-color:#000;color:#fff;">
     <div class="container">
         <div class="row">
             <div class="col-xl-6 col-lg-6 col-md-6 col-sm-6 col-12">

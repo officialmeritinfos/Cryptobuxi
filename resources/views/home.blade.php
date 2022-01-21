@@ -223,60 +223,6 @@
             </div>
         </div>
 
-        <!--<div class="market section-padding page-section" data-scroll-index="1">
-            <div class="container">
-                <div class="row justify-content-center">
-                    <div class="col-xl-8">
-                        <div class="section-title text-center">
-                            <h2>The World's Leading Cryptocurrency Exchange</h2>
-                            <p>Trade Bitcoin, ETH, and number of other cryptocurrencies in minutes.</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-xl-12">
-                        <div class="market-table">
-                            <div class="table-responsive">
-                                <table class="table mb-0 table-responsive-sm table-striped">
-                                    <thead>
-                                        <tr>
-                                            <th>#</th>
-                                            <th>Name</th>
-                                            <th>Price</th>
-                                            <th>Trade</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @php
-                                            $cnt=0;
-                                        @endphp
-                                        @foreach ($coins as $asset)
-                                        @php
-                                            $cnt=$cnt++;
-                                        @endphp
-                                            <tr>
-                                                <td>{{$cnt}}</td>
-                                                <td class="coin_icon">
-                                                    <img src="{{asset('cryptocoins/'.strtolower($asset->icon).'.svg')}}"
-                                                    style="width:20px;margin-right:10px;">
-                                                    <span>{{$asset->name}} <b>{{$asset->icon}}</b></span>
-                                                </td>
-
-                                                <td>
-                                                    USD
-                                                    {{number_format($rate,3)}}
-                                                </td>
-                                                <td><a href="#" class="btn btn-success">Buy</a></td>
-                                            </tr>
-                                        @endforeach
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>-->
 
         <div class="promo section-padding">
             <div class="container">
