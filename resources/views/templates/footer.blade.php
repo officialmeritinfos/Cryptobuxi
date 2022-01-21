@@ -25,8 +25,8 @@
                 <div class="bottom-widget">
                     <h4 class="widget-title">Support</h4>
                     <ul>
-                        <li><a href="{{url('help')}}">Help Center</a></li>
-                        <li><a href="{{url('faq')}}">FAQ</a></li>
+                        <li><a href="{{$web->helpLink}}">Help Center</a></li>
+                        <li><a href="{{$web->faqLink}}">FAQ</a></li>
                         <li><a href="{{url('contact')}}">Contact Us</a></li>
                         <li><a href="{{$web->blogLink}}">Blog</a></li>
                         <li><a href="{{url('supported_crypto')}}">Supported Crypto</a></li>

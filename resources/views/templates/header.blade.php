@@ -87,10 +87,13 @@
                                             </a>
                                             <div class="dropdown-menu">
                                                 <a class="dropdown-item" href="{{url('contact')}}">Contact us</a>
-                                                <a class="dropdown-item" href="{{url('help')}}">Help Desk</a>
-                                                <a class="dropdown-item" href="{{url('faq')}}">FAQ</a>
+                                                <a class="dropdown-item" href="{{$web->helpLink}}">Help Desk</a>
+                                                <a class="dropdown-item" href="{{$web->faqLink}}">FAQ</a>
                                             </div>
                                         </li>
+                                        @auth
+
+                                        @endauth
                                         <li class="nav-item dropdown">
                                             <a class="nav-link dropdown-toggle" href="#" data-toggle="dropdown">Account
                                             </a>
@@ -99,16 +102,37 @@
                                                 <a class="dropdown-item" href="{{url('login')}}">Login</a>
                                             </div>
                                         </li>
-                                        <li class="nav-item">
-                                            <a class="nav-link" href="dashboard">Dashboard</a>
-                                        </li>
+                                        @auth
+                                            @if (auth()->user()->is_admin ==1)
+                                                <li class="nav-item">
+                                                    <a class="nav-link" href="{{url('admin/dashboard')}}">Dashboard</a>
+                                                </li>
+                                            @else
+                                                <li class="nav-item">
+                                                    <a class="nav-link" href="{{url('account/dashboard')}}">Dashboard</a>
+                                                </li>
+                                            @endif
+                                        @endauth
 
                                     </ul>
                                 </div>
 
-                                <div class="signin-btn">
-                                    <a class="btn btn-primary" href="{{url('login')}}">Sign in</a>
-                                </div>
+                                @auth
+                                    @if (auth()->user()->is_admin ==1)
+                                        <div class="signin-btn">
+                                            <a class="btn btn-primary" href="{{url('admin/logout')}}">Log out</a>
+                                        </div>
+                                    @else
+                                        <div class="signin-btn">
+                                            <a class="btn btn-primary" href="{{url('account/logout')}}">Log out</a>
+                                        </div>
+                                    @endif
+                                @endauth
+                                @guest
+                                    <div class="signin-btn">
+                                        <a class="btn btn-primary" href="{{url('login')}}">Sign in</a>
+                                    </div>
+                                @endguest
                             </nav>
                         </div>
                     </div>
