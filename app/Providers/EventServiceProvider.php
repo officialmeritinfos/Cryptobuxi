@@ -21,6 +21,7 @@ use App\Listeners\SendNotificationMail;
 use App\Listeners\SendRecoveryMail;
 use App\Listeners\SendTwoFactorMail;
 use App\Listeners\UserActivity;
+use App\Listeners\UserNotification;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
@@ -37,6 +38,7 @@ class EventServiceProvider extends ServiceProvider
         UserCreated::class => [
             createBalance::class,
             EmailVerification::class,
+            UserNotification::class,
         ],
         SendWelcomeMail::class => [
             SendMail::class,

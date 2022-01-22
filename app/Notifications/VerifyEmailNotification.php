@@ -48,9 +48,9 @@ class VerifyEmailNotification extends Notification
         $url = route('complete-verification',[$this->email,sha1($this->token)]);
         return (new MailMessage)
                 ->greeting('Hello '.$this->name)
-                ->line('Your account is almost created completely')
+                ->line('Your account is almost created.')
                 ->line('Click on the Link below to verify your email address and activate
-                all the features of this platform')
+                all the features of '.env('APP_NAME'))
                 ->action('Verify Email', $url)
                 ->line('Thank you for choosing '.env('APP_NAME'));
     }
