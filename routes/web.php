@@ -34,5 +34,7 @@ Route::get('lending',[HomeController::class,'lending']);
 Route::get('peer',[HomeController::class,'peer']);
 Route::middleware('checkCountry')->group(function(){
     Route::get('price',[HomeController::class,'pricing']);
-    Route::get('register',[Register::class,'index']);
 });
+/*===========AUTHENTICATION ROUTE======================*/
+Route::get('register',[Register::class,'index']);
+Route::post('register',[Register::class,'doRegister']);

@@ -7,9 +7,7 @@ use Illuminate\Support\Facades\DB;
 trait GenerateUnique
 {
     public function uniqueRef(){
-        $id = (string )Str::uuid();
-        $id = explode('-',$id);
-        $id = $id[3];
+        $id = mt_rand();
         return Str::padLeft($id,'10','0');
     }
 

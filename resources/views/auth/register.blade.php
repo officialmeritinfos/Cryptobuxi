@@ -72,6 +72,7 @@
 												</div>
                                                 <form method="post"
                                                       id="create_account" action="{{url('register')}}">
+                                                      @csrf
                                                     <div class="row">
                                                         <div class="form-group col-md-6">
                                                             <label class="form-label">Name</label>

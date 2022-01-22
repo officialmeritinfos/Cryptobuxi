@@ -2,6 +2,25 @@
 
 namespace App\Providers;
 
+use App\Events\AccountActivity;
+use App\Events\AccountRecovery;
+use App\Events\AccountRecoveryMail;
+use App\Events\LoginMail;
+use App\Events\SendGeneralMail;
+use App\Events\SendNotification;
+use App\Events\SendWelcomeMail;
+use App\Events\TwoFactor;
+use App\Events\UserCreated;
+use App\Listeners\AccountNotification;
+use App\Listeners\createBalance;
+use App\Listeners\EmailVerification;
+use App\Listeners\SendAccountLoginMail;
+use App\Listeners\SendAccountRecoveryMail;
+use App\Listeners\SendMail;
+use App\Listeners\SendNotificationMail;
+use App\Listeners\SendRecoveryMail;
+use App\Listeners\SendTwoFactorMail;
+use App\Listeners\UserActivity;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
@@ -15,9 +34,34 @@ class EventServiceProvider extends ServiceProvider
      * @var array<class-string, array<int, class-string>>
      */
     protected $listen = [
-        Registered::class => [
-            SendEmailVerificationNotification::class,
+        UserCreated::class => [
+            createBalance::class,
+            EmailVerification::class,
         ],
+        SendWelcomeMail::class => [
+            SendMail::class,
+        ],
+        TwoFactor::class => [
+            SendTwoFactorMail::class,
+        ],
+        AccountRecovery::class =>[
+            SendRecoveryMail::class
+        ],
+        AccountRecoveryMail::class =>[
+            SendAccountRecoveryMail::class
+        ],
+        LoginMail::class => [
+            SendAccountLoginMail::class,
+        ],
+        SendNotification::class =>[
+            AccountNotification::class,
+        ],
+        AccountActivity::class =>[
+            UserActivity::class,
+        ],
+        SendGeneralMail::class =>[
+            SendNotificationMail::class,
+        ]
     ];
 
     /**
