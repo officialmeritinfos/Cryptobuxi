@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Events\AccountActivity;
 use App\Events\AccountRecovery;
 use App\Events\AccountRecoveryMail;
+use App\Events\AdminNotification;
 use App\Events\LoginMail;
 use App\Events\SendGeneralMail;
 use App\Events\SendNotification;
@@ -16,6 +17,7 @@ use App\Listeners\createBalance;
 use App\Listeners\EmailVerification;
 use App\Listeners\SendAccountLoginMail;
 use App\Listeners\SendAccountRecoveryMail;
+use App\Listeners\SendAdminMail;
 use App\Listeners\SendMail;
 use App\Listeners\SendNotificationMail;
 use App\Listeners\SendRecoveryMail;
@@ -46,9 +48,6 @@ class EventServiceProvider extends ServiceProvider
         TwoFactor::class => [
             SendTwoFactorMail::class,
         ],
-        AccountRecovery::class =>[
-            SendRecoveryMail::class
-        ],
         AccountRecoveryMail::class =>[
             SendAccountRecoveryMail::class
         ],
@@ -63,6 +62,9 @@ class EventServiceProvider extends ServiceProvider
         ],
         SendGeneralMail::class =>[
             SendNotificationMail::class,
+        ],
+        AdminNotification::class =>[
+            SendAdminMail::class,
         ]
     ];
 

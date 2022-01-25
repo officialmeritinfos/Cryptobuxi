@@ -45,9 +45,10 @@ class WelcomeEmail extends Notification
         $url = route('login');
         return (new MailMessage)
                 ->greeting('Hello '.$this->name)
-                ->line('Welcome to '.env('APP_NAME').', your one stop crypto wallet solution')
-                ->line('Building '.env('APP_NAME').', we envisioned an all inclusive wallet solution
-                for all kind of transaction while at same time hosuing the most powerful revenue model of staking.
+                ->line('Welcome to '.env('APP_NAME').', your one stop crypto trading and wallet solution. I am Michael Erastus,
+                        the CEO of '.env('APP_NAME').'.')
+                ->line('Building '.env('APP_NAME').', we envisioned an all inclusive wallet and trading solution
+                for all kind of transaction while at same time ensuring maximum security and customer satisfaction.
                 We want you to have the best experience while using our service, and if you should ever met any challenge
                 contact our support right away.')
                 ->action('Go to Dashboard', $url)

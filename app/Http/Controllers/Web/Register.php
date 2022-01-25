@@ -4,14 +4,19 @@ namespace App\Http\Controllers\Web;
 
 use App\Custom\GenerateUnique;
 use App\Custom\Regular;
+use App\Events\AdminNotification;
 use App\Events\SendWelcomeMail;
 use App\Events\UserCreated;
 use App\Http\Controllers\Api\BaseController;
 use App\Http\Controllers\Controller;
 use App\Models\CurrencyAccepted;
+use App\Models\EmailVerifyToken;
 use App\Models\GeneralSetting;
 use App\Models\User;
+use App\Notifications\CustomNotification;
+use App\Notifications\WelcomeEmail;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
@@ -78,7 +83,7 @@ class Register extends BaseController
 
         $fiat =(!empty(strtolower($country_code))) ? CurrencyAccepted::where('country','all')->orWhere('country',strtolower($country_code))->where(function($query){
             $query->where('status',1);
-        })->get() : CurrencyAccepted::where('status',1)->where('country','all')->get();
+        })->first() : CurrencyAccepted::where('status',1)->where('country','all')->first();
 
         $userData = ['name'=>$validated['name'],'email'=>$validated['email'],'phone'=>$phone,'emailVerified'=>$generalSettings->emailVerification,
             'twoWay'=>$generalSettings->twoWay,'password'=>bcrypt($validated['password']),'creation_ip'=>$userIp,'userRef'=>$userRef,
@@ -86,26 +91,67 @@ class Register extends BaseController
         ];
         $user = User::create($userData);
         if(!empty($user)) {
-            $admin = User::where('is_admin',1)->first();
+            $messageAdmin = "There is a new registration on ".config('app.name').". Account Reference Code is ".$userRef;
             switch ($generalSettings->emailVerification){
                 case 1:
                     event(new SendWelcomeMail($user));
-                    event(new UserCreated($user,$admin));
+                    event(new UserCreated($user));
                     $success['name']=$user->name;
                     $success['needVerification'] = false;
+                    $success['redirect_to']='login';
                     $message='Account successfully created, proceed to login';
                     break;
                 case 2:
-                    event(new UserCreated($user,$admin));
+                    event(new UserCreated($user));
                     $success['name']=$user->name;
                     $success['needVerification'] = true;
-                    $message='Account successfully created. Use the code sent to your mail to verify your account';
+                    $success['redirect_to']='register/confirm/'.$user->email;
+                    $message='Account successfully created. We need you to verify your email first before proceeding';
                     break;
             }
+            Auth::loginUsingId($user->id);
+            event(new AdminNotification('New Registration',$messageAdmin));
             return $this->sendResponse($success, $message);
         }else{
             return $this->sendError('Error Creating account', ['error'=>'An error has occurred while creating your
             account.'],'401','account error');
         }
+    }
+    public function verifyEmail($email,$hash){
+        $exists = EmailVerifyToken::where('email',$email)->orderBy('id','desc')->first();
+        if(!empty($exists)){
+            //check if the token matches the sent token
+            $sysToken = sha1($exists->token);
+            if($sysToken == $hash){
+                $user = User::where('email',$email)->first();
+                $dataUser= [
+                    'emailVerified'=>1,
+                    'email_verified_at'=>date('Y-m-d h:i:s u')
+                ];
+                $update = User::where('id',$user->id)->update($dataUser);
+                if($update){
+                    $user->notify(new WelcomeEmail($user->name));
+                    EmailVerifyToken::where('email',$email)->delete();
+                    return redirect('login')->with('success','Account Successfully verified.') ;
+                }else{
+                    return redirect('register')->with('error','Error processing Verification') ;
+                }
+            }else{
+                echo "Invalid token supplied";}
+        }else{
+            echo "Invalid token accessor supplied";
+        }
+    }
+    public function confirmationNeeded($email)
+    {
+        $user= Auth::user();
+        $webSettings = GeneralSetting::findOrFail(1);
+        $viewData=[
+            'siteName'=>$webSettings->siteName,
+            'web'=>$webSettings,
+            'pageName'=> 'Email verification',
+            'email'=>$user->email
+        ];
+        return view('auth.verify_email',$viewData);
     }
 }

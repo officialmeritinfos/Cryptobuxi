@@ -12,16 +12,18 @@ class CustomNotification extends Notification
     use Queueable;
     public $name;
     public $message;
+    public $subject;
     /**
      * Create a new notification instance.
      *
      * @return void
      */
-    public function __construct($name,$message)
+    public function __construct($name,$message,$subject)
     {
         //
         $this->name = $name;
         $this->message = $message;
+        $this->subject = $subject;
     }
 
     /**
@@ -44,6 +46,7 @@ class CustomNotification extends Notification
     public function toMail($notifiable)
     {
         return (new MailMessage)
+                ->subject($this->subject)
                 ->greeting('Hello '.$this->name)
                 ->line($this->message)
                 ->line('Thank you for choosing '.env('APP_NAME'));

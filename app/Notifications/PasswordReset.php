@@ -2,12 +2,13 @@
 
 namespace App\Notifications;
 
+use App\Models\GeneralSetting;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class VerifyEmailNotification extends Notification
+class PasswordReset extends Notification
 {
     use Queueable;
     public $name;
@@ -18,9 +19,8 @@ class VerifyEmailNotification extends Notification
      *
      * @return void
      */
-    public function __construct($name, $email, $token)
+    public function __construct($name,$email,$token)
     {
-        //
         $this->name = $name;
         $this->email = $email;
         $this->token = $token;
@@ -45,15 +45,17 @@ class VerifyEmailNotification extends Notification
      */
     public function toMail($notifiable)
     {
-        $url = route('complete-verification',[$this->email,sha1($this->token)]);
+        $web= GeneralSetting::where('id',1)->first();
+        $url = route('complete-recover',[$this->email,sha1($this->token)]);
         return (new MailMessage)
-                ->subject('Email Verification')
-                ->greeting('Hello '.$this->name)
-                ->line('Your account is almost created.')
-                ->line('Click on the Link below to verify your email address and activate
-                all the features of '.env('APP_NAME'))
-                ->action('Verify Email', $url)
-                ->line('Thank you for choosing '.env('APP_NAME'));
+            ->subject('Password Reset')
+            ->greeting('Hello '.$this->name)
+            ->line('There is a Password Request request on your '.env('APP_NAME').' account. Click the button below
+                to authorize this request. Link expires in '.$web->codeExpires)
+            ->action('Reset', $url)
+            ->line('Do not share this link with anybody via mail, sms, or phone call. None of our staff will ever ask for it
+                either. Be vigilant!')
+            ->line('Thank you for choosing '.env('APP_NAME'));
     }
 
     /**

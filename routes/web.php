@@ -1,6 +1,9 @@
 <?php
 
+use App\Http\Controllers\Web\Dashboard\Home;
 use App\Http\Controllers\Web\HomeController;
+use App\Http\Controllers\Web\Login;
+use App\Http\Controllers\Web\RecoverPassword;
 use App\Http\Controllers\Web\Register;
 use Illuminate\Support\Facades\Route;
 
@@ -38,3 +41,22 @@ Route::middleware('checkCountry')->group(function(){
 /*===========AUTHENTICATION ROUTE======================*/
 Route::get('register',[Register::class,'index']);
 Route::post('register',[Register::class,'doRegister']);
+Route::get('/email/verify/{id}/{hash}',[Register::class,'verifyEmail'])->name('complete-verification');
+Route::get('login',[Login::class,'index'])->name('login');
+Route::post('login',[Login::class,'doLogin']);
+Route::get('/login/verify/{id}/{hash}',[Login::class,'verifyLogin'])->name('complete-login');
+Route::get('recoverpassword',[RecoverPassword::class,'index'])->name('recoverpassword');
+Route::post('recoverpassword',[RecoverPassword::class,'doRecover']);
+Route::get('/recoverpassword/verify/{id}/{hash}',[RecoverPassword::class,'verifyReset'])->name('complete-recover');
+Route::middleware(['auth'])->group(function(){
+    Route::get('register/confirm/{email}',[Register::class,'confirmationNeeded'])->name('emailVerify');
+    Route::get('login/confirm/{email}',[Login::class,'confirmationNeeded'])->name('twoway');
+    Route::middleware(['twoWay','emailVerify'])->prefix('account')->group(function (){
+        Route::get('dashboard',[Home::class,'index']);
+    });
+    //Logout Route
+    Route::get('account/logout',[Login::class,'logout']);
+});
+Route::post('resetpassword',[RecoverPassword::class,'doReset']);
+
+/*====================DASHB

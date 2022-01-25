@@ -41,7 +41,7 @@ class PasswordChange extends Notification
      */
     public function toMail($notifiable)
     {
-        $url = route('dashboard');
+        $url = route('login');
         return (new MailMessage)
                 ->greeting('Hello '.$this->name)
                 ->line('Your account login details was just changed on '.env('APP_NAME').'')

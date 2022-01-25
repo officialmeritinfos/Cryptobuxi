@@ -67,71 +67,28 @@
 										<div class="card p-4">
 											<div class="card-body">
 												<div class="text-center title-style mb-6">
-													<h1 class="mb-2">Create Your Account</h1>
+													<h1 class="mb-2">Recover Account</h1>
 													<hr>
+                                                    <p>Reset your password with a device you've recently used to access
+                                                        {{$siteName}} to avoid a temporary security restriction</p>
 												</div>
                                                 <form method="post"
-                                                      id="create_account" action="{{url('register')}}">
+                                                      id="recover_account" action="{{url('recoverpassword')}}">
                                                       @csrf
                                                     <div class="row">
-                                                        <div class="form-group col-md-6">
-                                                            <label class="form-label">Name</label>
-                                                            <div class="input-group">
-                                                                <input type="text" class="form-control form-control-lg "
-                                                                    placeholder="Full Name" name="name" required>
-                                                            </div>
-                                                        </div>
-                                                        <div class="form-group col-md-6">
+                                                        <div class="form-group col-md-12">
                                                             <label class="form-label">Email</label>
                                                             <div class="input-group">
                                                             <input type="text" class="form-control form-control-lg"
                                                                 placeholder="Enter Email" name="email" required>
                                                             </div>
                                                         </div>
-                                                        <div class="form-group col-md-12">
-                                                            <label class="form-label">Phone</label>
-                                                            <div class="input-group">
-                                                                <input type="number" class="form-control form-control-lg"
-                                                                    placeholder="Enter mobile Phone" name="phone" required>
-                                                            </div>
-                                                        </div>
-                                                        <div class="form-group col-md-12">
-                                                            <label class="form-label">Password</label>
-                                                            <div class="input-group">
-                                                                <input type="password" class="form-control form-control-lg"
-                                                                    placeholder="Password" name="password" required id="password">
-                                                                <span class="input-group-append">
-                                                                    <button class="btn btn-dark box-shadow-0 show-password" type="button">
-                                                                    <i class="fa fa-eye"></i></button>
-                                                                </span>
-                                                                <span class="input-group-append">
-                                                                    <button class="btn btn-dark box-shadow-0 hide-password" style="display: none;" type="button">
-                                                                    <i class="fa fa-eye-slash"></i></button>
-                                                                </span>
-                                                            </div>
-                                                            <small class="text-info">
-                                                                Password must contain at least: one specialcharacter, an upercase and lowercase letter, and number.
-                                                            </small>
-                                                        </div>
-                                                    </div>
-                                                    <div class="form-group">
-                                                        <label class="custom-control custom-checkbox">
-                                                            <input type="checkbox" class="custom-control-input" required />
-                                                            <span class="custom-control-label ">
-                                                                I certify that I am 18 years of age or older, and agree to the
-                                                                <a href="{{url('legal')}}" class="btn-link">
-                                                                    User Agreement  </a> and <a href="{{url('privacy')}}" class="btn-link">
-                                                                        Privacy Policy </a> including the
-                                                                        <a href="{{url('aml')}}" class="btn-link"> Anti-money Laundering
-                                                                            policy</a>
-                                                            </span>
-                                                        </label>
                                                     </div>
                                                     <div class="row">
                                                         <div class="col-12">
                                                             <button type="submit" class="btn btn-lg btn-primary btn-block px-4" id="submit" disabled>
                                                                 <i class="fa fa-arrow-right"></i>
-                                                                Create account
+                                                                Reset
                                                             </button>
                                                         </div>
                                                     </div>
@@ -140,8 +97,8 @@
 										</div>
 									</div>
 									<div class="text-center pt-4">
-										<div class="font-weight-normal fs-16 text-white">You Already have an account?
-                                            <a class="btn-link font-weight-bolder text-white" href="{{url('login')}}">Log in</a>
+										<div class="font-weight-normal fs-16 text-white">Don't have an account?
+                                            <a class="btn-link font-weight-bolder text-white" href="{{url('register')}}">Signup</a>
                                         </div>
 									</div>
 								</div>
@@ -169,5 +126,5 @@
 		<script src="{{asset('dashboard/auth/password.js')}}"></script>
 		<script src="{{asset('dashboard/auth/authentication.js')}}"></script>
         @include('templates.noti_js')
-    </body>
+	</body>
 </html>
