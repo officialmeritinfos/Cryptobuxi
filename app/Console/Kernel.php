@@ -4,6 +4,14 @@ namespace App\Console;
 
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
+use App\Console\Commands\createSystemAccount;
+use App\Console\Commands\createSystemTokenAccount;
+use App\Console\Commands\createUserWallet;
+use App\Console\Commands\createUserTokenAccount;
+use App\Console\Commands\initializeSystemWalletSubscription;
+use App\Console\Commands\initializeUserWalletSubscription;
+use App\Console\Commands\initializeUserBalance;
+use App\Console\Commands\initializeUserLoanBalance;
 
 class Kernel extends ConsoleKernel
 {
@@ -16,6 +24,15 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule)
     {
         // $schedule->command('inspire')->hourly();
+        $schedule->command('create:systemAccount')->everyMinute();
+        $schedule->command('create:systemTokenAccount')->everyMinute();
+        $schedule->command('create:userWallet')->everyMinute();
+        $schedule->command('create:userTokenWallet')->everyMinute();
+        $schedule->command('initialize:systemSubscription')->everyMinute();
+        $schedule->command('initialize:userWalletSubscription')->everyMinute();
+        $schedule->command('initialize:userTradingBalance')->everyMinute();
+        $schedule->command('initialize:userLoanBalance')->everyMinute();
+
     }
 
     /**

@@ -45,6 +45,13 @@ class Wallet{
         ])->post ($this->url.'v3/ledger/account',$data);
         return $response;
     }
+    public function assignAddressToAccount($account,$address)
+    {
+        $response = Http::withHeaders([
+            "x-api-key" =>$this->tetum
+        ])->post ($this->url.'v3/offchain/account/'.$account.'/address/'.$address);
+        return $response;
+    }
     public function generateAddress($account){
         $response = Http::withHeaders([
             "x-api-key" =>$this->tetum

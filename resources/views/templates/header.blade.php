@@ -40,10 +40,8 @@
 <body>
 
     <div id="preloader">
-        <div class="sk-three-bounce">
-            <div class="sk-child sk-bounce1"></div>
-            <div class="sk-child sk-bounce2"></div>
-            <div class="sk-child sk-bounce3"></div>
+        <div class="sk-three-bounce" style="margin-top:250px;">
+            <img src="{{asset('dashboard/loader2.gif')}}" alt="loader">
         </div>
     </div>
     <div id="main-wrapper">

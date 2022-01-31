@@ -51,6 +51,8 @@ Route::get('/recoverpassword/verify/{id}/{hash}',[RecoverPassword::class,'verify
 Route::middleware(['auth'])->group(function(){
     Route::get('register/confirm/{email}',[Register::class,'confirmationNeeded'])->name('emailVerify');
     Route::get('login/confirm/{email}',[Login::class,'confirmationNeeded'])->name('twoway');
+
+    /*====================DASHBOARD ROUTE ============*/
     Route::middleware(['twoWay','emailVerify'])->prefix('account')->group(function (){
         Route::get('dashboard',[Home::class,'index']);
     });
@@ -58,5 +60,3 @@ Route::middleware(['auth'])->group(function(){
     Route::get('account/logout',[Login::class,'logout']);
 });
 Route::post('resetpassword',[RecoverPassword::class,'doReset']);
-
-/*====================DASHB

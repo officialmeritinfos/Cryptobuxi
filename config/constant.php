@@ -2,8 +2,8 @@
 
 return [
     'tatum'        =>[
-        'testnet_api'   =>'cc175b65-74ca-4636-b8d6-e025631ddaf2',
-        'livenet_api'   =>'bd9398f1-a160-4550-9ecd-75b9b583db9b',
+        'testnet_api'   =>'778f9c70-9d63-4da1-a01c-bcf747c3e750',
+        'livenet_api'   =>'0a132c37-fecd-4c52-9cb7-c20104e3b1b4',
         'is_live'       =>1,
         'live_url'      =>'https://api-eu1.tatum.io/'
     ],
