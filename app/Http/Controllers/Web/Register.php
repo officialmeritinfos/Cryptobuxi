@@ -55,6 +55,11 @@ class Register extends BaseController
         }else{
             $ref = '';
         }
+        //check if the phone number is being used
+        $phoneExists = User::where('phone',$phone)->first();
+        if (!empty($phoneExists)) {
+            return $this->sendError('Error validation',['error'=>'Mobile number already in use.'],'422','Validation Failed');
+        }
         $ipAddress = $request->ip();
         //get the user's country
         $ipDetector = new Regular();

@@ -20,7 +20,7 @@ class AdminNotification
      *
      * @return void
      */
-    public function __construct($subject,$message)
+    public function __construct($message,$subject)
     {
         $this->message = $message;
         $this->subject = $subject;

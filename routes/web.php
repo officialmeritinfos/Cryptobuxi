@@ -55,6 +55,11 @@ Route::middleware(['auth'])->group(function(){
     /*====================DASHBOARD ROUTE ============*/
     Route::middleware(['twoWay','emailVerify'])->prefix('account')->group(function (){
         Route::get('dashboard',[Home::class,'index']);
+        Route::post('dashboard/set_pin',[Home::class,'setPin']);
+        Route::post('dashboard/identity_verification',[Home::class,'verifyAccount']);
+        Route::post('dashboard/identity_verification_doc',[Home::class,'verifyAccountDoc']);
+        Route::get('dashboard/get_receive_wallet/{asset}',[Home::class,'getReceiveWallet']);
+        Route::get('dashboard/test_caching/{asset}',[Home::class,'testEndpointCache']);
     });
     //Logout Route
     Route::get('account/logout',[Login::class,'logout']);

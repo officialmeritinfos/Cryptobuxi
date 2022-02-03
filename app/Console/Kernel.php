@@ -12,6 +12,7 @@ use App\Console\Commands\initializeSystemWalletSubscription;
 use App\Console\Commands\initializeUserWalletSubscription;
 use App\Console\Commands\initializeUserBalance;
 use App\Console\Commands\initializeUserLoanBalance;
+use App\Console\Commands\CacheRates;
 
 class Kernel extends ConsoleKernel
 {
@@ -32,6 +33,7 @@ class Kernel extends ConsoleKernel
         $schedule->command('initialize:userWalletSubscription')->everyMinute();
         $schedule->command('initialize:userTradingBalance')->everyMinute();
         $schedule->command('initialize:userLoanBalance')->everyMinute();
+        $schedule->command('cache:cryptoRates')->everyMinute();
 
     }
 

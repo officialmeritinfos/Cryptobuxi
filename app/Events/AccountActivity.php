@@ -13,15 +13,17 @@ use Illuminate\Queue\SerializesModels;
 class AccountActivity
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
-
+    public $user;
+    public $data;
     /**
      * Create a new event instance.
      *
      * @return void
      */
-    public function __construct()
+    public function __construct($user,$data)
     {
-        //
+        $this->user = $user;
+        $this->data = $data;
     }
 
     /**

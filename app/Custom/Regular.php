@@ -1,6 +1,10 @@
 <?php
 namespace App\Custom;
 
+use App\Models\Coin;
+use App\Models\Countries;
+use App\Models\Wallet;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 
 /**
@@ -68,6 +72,28 @@ class Regular{
         }
 
         return $n_format . $suffix;
+    }
+    public function getWalletCoinIcon($asset)
+    {
+        $coin = Coin::where('asset',$asset)->first();
+        return $coin->icon;
+    }
+    public function countries()
+    {
+        $country = Countries::get();
+        return $country;
+    }
+    public function getUserWallet($user)
+    {
+        $wallets = Wallet::where('user',$user)->join('coins','wallets.asset','coins.asset')->get();
+        return $wallets;
+    }
+    public function getCryptoExchange($coin)
+    {
+        //set the coin as the cache
+        $key = strtoupper($coin);
+        $value= Cache::get($key);
+        return $value;
     }
 }
 

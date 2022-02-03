@@ -82,7 +82,14 @@
     <!-- File Uploads css-->
     <link href="{{ asset('dashboard/assets/plugins/fileupload/css/fileupload.css')}}" rel="stylesheet" type="text/css" />
     <!-- INTERNAL CSS END -->
+
+	<link href="{{ asset('dashboard/assets/plugins/select2/select2.min.css')}}" rel="stylesheet" />
     @include('templates.noti_css')
+    <style>
+        .break-text {
+            word-wrap: break-word;
+        }
+    </style>
 </head>
 
 <body class="app sidebar-mini light-mode light-sidebar">
@@ -287,3 +294,21 @@
                     </div>
                 </div>
                 <!--/app header-->
+                <!--Page header-->
+                <div class="page-header">
+                    <div class="page-leftheader">
+                        <h4 class="page-title">{{$pageName}}</h4>
+                    </div>
+                    <div class="page-rightheader ml-auto d-lg-flex">
+                        <div class="ml-5 mb-0 row">
+                            <button class="btn btn-primary btn-md" data-toggle="modal" data-target="#buy_sell"
+                            style="margin-right:2px;">
+                                Buy/Sell
+                            </button>
+                            <button class="btn btn-dark btn-md" data-toggle="modal" data-target="#send_receive">
+                                Send/Receive
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <!--End Page header-->

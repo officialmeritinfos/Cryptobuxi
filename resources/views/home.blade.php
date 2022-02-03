@@ -62,7 +62,7 @@
             <div class="container">
                 <div class="row">
                     @foreach ($coins as $asset)
-                    @inject('rate','App\Custom\Wallet')
+                    @inject('rate','App\Custom\Regular')
                         <div class="col-xl-4 col-lg-4 col-md-6 col-sm-6 mx-auto">
                             <div class="card">
                                 <div class="card-header">
@@ -81,7 +81,7 @@
                                     <h3>
                                         USD
                                         @php
-                                            $rate = $rate->getCryptoExchange($asset->asset,'USD')
+                                            $rate = $rate->getCryptoExchange($asset->asset)
                                         @endphp
                                         {{number_format($rate,3)}}
                                     </h3>

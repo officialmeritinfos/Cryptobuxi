@@ -13,15 +13,19 @@ use Illuminate\Queue\SerializesModels;
 class SendNotification
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
-
+    public $user;
+    public $subject;
+    public $message;
     /**
      * Create a new event instance.
      *
      * @return void
      */
-    public function __construct()
+    public function __construct($user,$message,$subject)
     {
-        //
+        $this->user = $user;
+        $this->message = $message;
+        $this->subject = $subject;
     }
 
     /**
