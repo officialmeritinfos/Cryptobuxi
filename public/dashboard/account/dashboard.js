@@ -331,6 +331,7 @@
                         $('#notes').text(data.data.note);
                         $('#bal_text').text(coin+' Balance ');
                         $('#balance').text(data.data.balance+' '+coin);
+                        $('#fiat').text(data.data.exRate+' '+data.data.fiat);
                         $('#balanceRow').show();
                         $('#wallet').show();
                         //return to natural stage
@@ -402,6 +403,7 @@
                         $('#notes').text(data.data.note);
                         $('#bal_text').text(coin+' Balance ');
                         $('#balance').text(data.data.balance+' '+coin);
+                        $('#fiat').text(data.data.exRate+' '+data.data.fiat);
                         $('#balanceRow').show();
                         $('#wallet').show();
                         //return to natural stage

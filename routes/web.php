@@ -35,6 +35,8 @@ Route::get('supported_crypto',[HomeController::class,'supported_crypto']);
 Route::get('supported_countries',[HomeController::class,'supported_countries']);
 Route::get('lending',[HomeController::class,'lending']);
 Route::get('peer',[HomeController::class,'peer']);
+Route::get('fiat_to_crypto/{crypto}/{fiat}/{amount}',[HomeController::class,'getFiatToCryptoRate']);
+Route::get('crypto_to_fiat/{crypto}/{fiat}/{amount}',[HomeController::class,'getCryptToFiatRate']);
 Route::middleware('checkCountry')->group(function(){
     Route::get('price',[HomeController::class,'pricing']);
 });
@@ -59,7 +61,6 @@ Route::middleware(['auth'])->group(function(){
         Route::post('dashboard/identity_verification',[Home::class,'verifyAccount']);
         Route::post('dashboard/identity_verification_doc',[Home::class,'verifyAccountDoc']);
         Route::get('dashboard/get_receive_wallet/{asset}',[Home::class,'getReceiveWallet']);
-        Route::get('dashboard/test_caching/{asset}',[Home::class,'testEndpointCache']);
     });
     //Logout Route
     Route::get('account/logout',[Login::class,'logout']);

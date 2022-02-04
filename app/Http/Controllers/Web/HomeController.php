@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Web;
 
+use App\Custom\Regular;
+use App\Http\Controllers\Api\BaseController;
 use App\Http\Controllers\Controller;
 use App\Models\Coin;
 use App\Models\CurrencyAccepted;
@@ -9,8 +11,12 @@ use App\Models\GeneralSetting;
 use App\Models\TradingPair;
 use Illuminate\Http\Request;
 
-class HomeController extends Controller
+class HomeController extends BaseController
 {
+    public $regular;
+    public function __construct() {
+        $this->regular = new Regular();
+    }
     public function index()
     {
         $webSettings = GeneralSetting::where('id',1)->first();
@@ -251,5 +257,53 @@ class HomeController extends Controller
             'fiats'=>$fiats
         ];
         return view('borrow',$viewData);
+    }
+    public function getCryptToFiatRate($crypto,$fiat,$amount)
+    {
+        //check if fiat is supported
+        $currencySupported = CurrencyAccepted::where('code',strtoupper($fiat))->first();
+        if (empty($currencySupported)) {
+            return $this->sendError('validation Error ', ['error' => 'Unsupported fiat'], '422', 'Fiat not supported');
+        }
+        //check if crypto is supported
+        $coin = Coin::where('asset',strtoupper($crypto))->where('status',1)->first();
+        if(empty($coin)){
+            return $this->sendError('validation Error ', ['error' => 'Unsupported asset'], '422', 'Asset not supported');
+        }
+        $cryptoRate = $this->regular->getCryptoExchange(strtoupper($crypto),strtoupper($fiat));
+        $amount = str_replace(',','',$amount);
+        //check if the amount is numeric
+        if (!is_numeric($amount)) {
+            return $this->sendError('validation Error ', ['error' => 'Amount must be numeric'], '422', 'Asset not supported');
+        }
+        //get the rate
+        $rate = $amount *$cryptoRate;
+        $success['fetched'] = true;
+        $success['rate']=$rate;
+        return $this->sendResponse($success, 'Fetched');
+    }
+    public function getFiatToCryptoRate($crypto,$fiat,$amount)
+    {
+        //check if fiat is supported
+        $currencySupported = CurrencyAccepted::where('code',strtoupper($fiat))->first();
+        if (empty($currencySupported)) {
+            return $this->sendError('validation Error ', ['error' => 'Unsupported fiat'], '422', 'Fiat not supported');
+        }
+        //check if crypto is supported
+        $coin = Coin::where('asset',strtoupper($crypto))->where('status',1)->first();
+        if(empty($coin)){
+            return $this->sendError('validation Error ', ['error' => 'Unsupported asset'], '422', 'Asset not supported');
+        }
+        $cryptoRate = $this->regular->getCryptoExchange(strtoupper($crypto),strtoupper($fiat));
+        $amount = str_replace(',','',$amount);
+        //check if the amount is numeric
+        if (!is_numeric($amount)) {
+            return $this->sendError('validation Error ', ['error' => 'Amount must be numeric'], '422', 'Asset not supported');
+        }
+        //get the rate
+        $rate = $amount /$cryptoRate;
+        $success['fetched'] = true;
+        $success['rate']=$rate;
+        return $this->sendResponse($success, 'Fetched');
     }
 }

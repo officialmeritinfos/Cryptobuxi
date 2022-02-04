@@ -436,7 +436,8 @@
                                             <div class="form-group col-md-12" id="balanceRow" style="display: none;">
                                                 <span class="pull-left" id="bal_text"> Balance</span>
                                                 <span class="pull-right">
-                                                    <span id="balance"> </span>
+                                                    <span id="balance"> </span> ≈
+                                                    <span id="fiat"> </span>
                                                 </span>
                                             </div>
                                         </div>

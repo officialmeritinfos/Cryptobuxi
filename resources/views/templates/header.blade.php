@@ -35,6 +35,7 @@
     <link rel="stylesheet" href="{{ asset('home/vendor/owl-carousel/css/owl.carousel.min.css') }}">
     <!-- Custom Stylesheet -->
     <link rel="stylesheet" href="{{ asset('home/css/style.css') }}">
+    @include('templates.noti_css')
 </head>
 
 <body>

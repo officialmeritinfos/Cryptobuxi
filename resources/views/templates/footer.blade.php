@@ -97,5 +97,8 @@
 <script src="{{ asset('home/vendor/apexchart/apexchart-init.js') }}"></script>
 
 <script src="{{ asset('home/js/scripts.js') }}"></script>
+
+@include('templates.noti_js')
+@include('templates.home_footer')
 </body>
 </html>

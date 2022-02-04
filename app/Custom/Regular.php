@@ -3,6 +3,7 @@ namespace App\Custom;
 
 use App\Models\Coin;
 use App\Models\Countries;
+use App\Models\CurrencyAccepted;
 use App\Models\Wallet;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
@@ -88,11 +89,24 @@ class Regular{
         $wallets = Wallet::where('user',$user)->join('coins','wallets.asset','coins.asset')->get();
         return $wallets;
     }
-    public function getCryptoExchange($coin)
+    public function getCryptoExchange($coin,$fiat=null)
     {
         //set the coin as the cache
         $key = strtoupper($coin);
         $value= Cache::get($key);
+        if ($fiat === null) {
+            $value = $value;
+        }else{
+            $curr = strtoupper($fiat);
+            $currencySupported = CurrencyAccepted::where('code',$curr)->first();
+            if ($curr == 'USD') {
+                $value = $value;
+            }else{
+                $rateUsd = $currencySupported->rateUsd;
+                $rate = $rateUsd*$value;
+                $value = $rate;
+            }
+        }
         return $value;
     }
 }

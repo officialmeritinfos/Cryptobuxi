@@ -26,8 +26,10 @@ use Illuminate\Support\Str;
 class Home extends BaseController
 {
     public $wallet;
+    public $regular;
     public function __construct() {
         $this->wallet = new CustomWallet();
+        $this->regular = new Regular();
     }
     public function index()
     {
@@ -214,19 +216,17 @@ class Home extends BaseController
         $address = $wallet->address;
         $currency = $user->majorCurrency;
         $balance = $wallet->availableBalance;
+
+        $rate = $this->regular->getCryptoExchange($wallet->asset,$currency);
+
         $success['fetched'] = true;
         $success['address'] =$address;
         $success['coin']=$wallet->name;
         $success['balance']=number_format($balance,4);
         $success['note']=$wallet->note;
         $success['network']=strtoupper($wallet->network);
+        $success['exRate']=$rate*$balance;
+        $success['fiat']=$currency;
         return $this->sendResponse($success, 'Address Fetched');
-    }
-    public function testEndpointCache($coin)
-    {
-        //set the coin as the cache
-        $key = strtoupper($coin);
-        $value= Cache::get($key);
-        echo $value;
     }
 }
