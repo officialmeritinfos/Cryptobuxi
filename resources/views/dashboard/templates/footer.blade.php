@@ -388,14 +388,14 @@
                                 <div class="panel panel-primary tabs-style-3">
                                         <div class="card-pay" align="center">
                                             <ul class="tabs-menu nav">
-                                                <li class="flex-fill"><a href="#tab32" class="active" data-toggle="tab">
-                                                    <i class="fa fa-credit-card"></i> Receive</a></li>
-                                                <li class="flex-fill"><a href="#tab33" data-toggle="tab" class="">
+                                                <li class="flex-fill"><a href="#tab33" class="active"  data-toggle="tab" class="">
                                                     <i class="fa fa-bank"></i>  Send </a></li>
+                                                <li class="flex-fill"><a href="#tab32" data-toggle="tab">
+                                                    <i class="fa fa-credit-card"></i> Receive</a></li>
                                             </ul>
                                         </div>
                                     <div class="tab-content">
-                                        <div class="tab-pane active show" id="tab32">
+                                        <div class="tab-pane" id="tab32">
                                             <div class="tab-menu-heading">
                                                 <div class="row">
                                                     <div class="form-group col-md-12">
@@ -441,8 +441,62 @@
                                                 </span>
                                             </div>
                                         </div>
-                                        <div class="tab-pane" id="tab33">
-
+                                        <div class="tab-pane active show" id="tab33">
+                                            <form method="POST" id="withdraw" action="{{url('account/dashboard/identity_verification')}}">
+                                                @csrf
+                                                <div class="tab-menu-heading">
+                                                    <div class="form-group col-md-12">
+                                                        <label for="exampleInputEmail1" class="form-label">Base Currency
+                                                            <sup class="text-danger">*</sup>
+                                                        </label>
+                                                        <select  class="form-control form-control-lg"
+                                                            name="base_curr">
+                                                            <option value="1">Crypto</option>
+                                                            <option value="2">Fiat</option>
+                                                        </select>
+                                                    </div>
+                                                    <div class="row">
+                                                        <div class="form-group col-md-12">
+                                                            <label for="exampleInputEmail1" class="form-label">Asset</label>
+                                                            <select  class="form-control form-control-lg" name="asset">
+                                                                @foreach ($wallets->getUserWallet($user->id) as $wallet)
+                                                                    <option value="{{$wallet->asset}}">{{$wallet->name}}</option>
+                                                                @endforeach
+                                                            </select>
+                                                        </div>
+                                                        <div class="form-group col-md-6">
+                                                            <label for="exampleInputEmail1" class="form-label">Amount
+                                                                <sup class="text-danger" id="amount_curr">*</sup>
+                                                            </label>
+                                                            <input type="txt" class="form-control form-control-lg input-amount" name="amount"
+                                                            value="0" id="amount">
+                                                        </div>
+                                                        <div class="form-group col-md-6" id="equi">
+                                                            <label for="exampleInputEmail1" class="form-label">Equivalent
+                                                                <sup class="text-success" id="curr_rate"></sup>
+                                                                </label>
+                                                            <input type="txt" class="form-control form-control-lg input-amount"
+                                                            name="rate" readonly>
+                                                        </div>
+                                                        <div class="form-group col-md-6" hidden>
+                                                            <label for="exampleInputEmail1" class="form-label"></label>
+                                                            <input type="txt" class="form-control form-control-lg input-amount"
+                                                            name="fiat" value="{{$user->majorCurrency}}" id="fiat">
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="text-center">
+                                                    <button type="submit" class="btn btn-success btn-md btn-lg text-center mt-4 mb-0" id="submit_send">
+                                                        <i class="fa fa-send"></i> Send</button>
+                                                </div>
+                                            </form><br>
+                                            <div class="form-group col-md-12" id="balanceRow">
+                                                <span class="pull-left" id="bal_texts"> Balance</span>
+                                                <span class="pull-right">
+                                                    <span id="balances"> </span> ≈
+                                                    <span id="fiats"> </span>
+                                                </span>
+                                            </div>
                                         </div>
 
                                     </div>
@@ -562,7 +616,6 @@
         <!--<script src="https://checkout.flutterwave.com/v3.js"></script>-->
         <script src="https://cdn.jsdelivr.net/npm/cleave.js@1.5.3/dist/cleave.min.js"></script>
         <script src="{{ asset('dashboard/account/dashboard.js')}}"></script>
-		<script src="{{asset('dashboard/auth/password.js')}}"></script>
         <script src="https://kit.fontawesome.com/6b3c5ea29e.js" crossorigin="anonymous"></script>
         <!--<script>
             $(document).ready(() => {
@@ -594,5 +647,6 @@
         <script>
             var clipboard = new ClipboardJS('.clipboard-icons');
         </script>
+        @include('dashboard.templates.rate')
 </body>
 </html>

@@ -229,4 +229,10 @@ class Home extends BaseController
         $success['fiat']=$currency;
         return $this->sendResponse($success, 'Address Fetched');
     }
+    public function getUserCurrency()
+    {
+        $user = Auth::user();
+        $success['fiat']=$user->majorCurrency;
+        return $this->sendResponse($success, 'Address Fetched');
+    }
 }

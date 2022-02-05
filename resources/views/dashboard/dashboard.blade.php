@@ -36,7 +36,7 @@
                         <div>
                             <p class=" mb-1 text-muted fs-12">{{$balance->asset}}/{{$user->majorCurrency}}</p>
                             <h3 class="mb-0 font-weight-bold">
-                                {{number_format($balance->availableBalance,4)}} {{$balance->asset}}
+                                {{number_format($balance->availableBalance,5)}} {{$balance->asset}}
                             </h3>
                         </div>
 

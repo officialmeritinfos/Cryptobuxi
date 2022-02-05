@@ -427,6 +427,122 @@
             });
         });
     }
+    var loadWalletDetails = function(){
+        $('#send_receive').on('show.bs.modal', function () {
+            var coin = $('select[name="asset"]').val();
+            var baseUrl='';
+            $.ajaxSetup({
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                }
+            });
+            $.ajax({
+                url: baseUrl+'/account/dashboard/get_receive_wallet/'+coin,
+                method: "GET",
+                dataType:"json",
+                beforeSend:function(){
+                    $('select[name="asset"]').attr('disabled', true);
+                    $("#submit_send").LoadingOverlay("show",{
+                        text        : "please wait",
+                        size        : "30"
+                    });
+                },
+                success:function(data)
+                {
+                    if(data.error)
+                    {
+                        toastr.options = {
+                            "closeButton" : true,
+                            "progressBar" : true
+                        }
+                        toastr.error(data.data.error);
+                        //return to natural stage
+                        setTimeout(function(){
+                            $('select[name="asset"]').attr('disabled', false);
+                            $("#submit_send").LoadingOverlay("hide");
+                        }, 3000);
+                    }
+                    if(data.success)
+                    {
+                        toastr.options = {
+                            "closeButton" : true,
+                            "progressBar" : true
+                        }
+                        $('#bal_texts').text(coin+' Balance ');
+                        $('#balances').text(data.data.balance+' '+coin);
+                        $('#fiats').text(data.data.exRate+' '+data.data.fiat);
+                        //return to natural stage
+                        $('select[name="asset"]').attr('disabled', false);
+                        $("#submit_send").LoadingOverlay("hide");
+                    }
+                },
+                error: function(jqXHR, textStatus, errorThrown){
+
+                    //return to natural stage
+                    $("#submit_send").LoadingOverlay("hide");
+                    $('select[name="asset"]').attr('disabled', false);
+                }
+
+            });
+            $('select[name="asset"]').on('change',(function(e) {
+                var coin = $(this).val();
+                var baseUrl='';
+                $.ajaxSetup({
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    }
+                });
+                $.ajax({
+                    url: baseUrl+'/account/dashboard/get_receive_wallet/'+coin,
+                    method: "GET",
+                    dataType:"json",
+                    beforeSend:function(){
+                        $('select[name="asset"]').attr('disabled', true);
+                        $("#submit_send").LoadingOverlay("show",{
+                            text        : "please wait",
+                            size        : "30"
+                        });
+                    },
+                    success:function(data)
+                    {
+                        if(data.error)
+                        {
+                            toastr.options = {
+                                "closeButton" : true,
+                                "progressBar" : true
+                            }
+                            toastr.error(data.data.error);
+                            //return to natural stage
+                            setTimeout(function(){
+                                $('select[name="asset"]').attr('disabled', false);
+                                $("#submit_send").LoadingOverlay("hide");
+                            }, 3000);
+                        }
+                        if(data.success)
+                        {
+                            toastr.options = {
+                                "closeButton" : true,
+                                "progressBar" : true
+                            }
+                            $('#bal_texts').text(coin+' Balance ');
+                            $('#balances').text(data.data.balance+' '+coin);
+                            $('#fiats').text(data.data.exRate+' '+data.data.fiat);
+                            //return to natural stage
+                            $('select[name="asset"]').attr('disabled', false);
+                            $("#submit_send").LoadingOverlay("hide");
+                        }
+                    },
+                    error: function(jqXHR, textStatus, errorThrown){
+
+                        //return to natural stage
+                        $("#submit_send").LoadingOverlay("hide");
+                        $('select[name="asset"]').attr('disabled', false);
+                    }
+
+                });
+            }));
+        });
+    }
     return {
         init: function() {
             setPin();
@@ -437,6 +553,7 @@
             closeModal();
             getUserReceiveWallet();
             getUserReadyReceiveWallet();
+            loadWalletDetails();
         }
     };
 }();

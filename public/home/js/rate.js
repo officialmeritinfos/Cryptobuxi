@@ -33,11 +33,7 @@ var rateRequests = function (){
                 {
                     if(data.error)
                     {
-                        toastr.options = {
-                            "closeButton" : true,
-                            "progressBar" : true
-                        }
-                        toastr.error(data.data.error);
+                        console.log(data.data.error);
                         //return to natural stage
                         setTimeout(function(){
                             $('#crypto').attr('disabled', false);
@@ -55,11 +51,8 @@ var rateRequests = function (){
                     }
                 },
                 error: function(jqXHR, textStatus, errorThrown){
-                    toastr.options = {
-                        "closeButton" : true,
-                        "progressBar" : true
-                    }
-                    toastr.error(errorThrown);
+
+                    console.log(errorThrown);
                     //return to natural stage
                     setTimeout(function(){
                         $("#exchange").LoadingOverlay("hide");
@@ -104,11 +97,7 @@ var rateRequests = function (){
                 {
                     if(data.error)
                     {
-                        toastr.options = {
-                            "closeButton" : true,
-                            "progressBar" : true
-                        }
-                        toastr.error(data.data.error);
+                        console.log(data.data.error);
                         //return to natural stage
                         setTimeout(function(){
                             $('#crypto').attr('disabled', false);
@@ -168,11 +157,7 @@ var rateRequests = function (){
                 {
                     if(data.error)
                     {
-                        toastr.options = {
-                            "closeButton" : true,
-                            "progressBar" : true
-                        }
-                        toastr.error(data.data.error);
+                        console.log(data.data.error);
                         //return to natural stage
                         setTimeout(function(){
                             $('#crypto').attr('disabled', false);

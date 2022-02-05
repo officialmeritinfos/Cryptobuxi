@@ -61,6 +61,7 @@ Route::middleware(['auth'])->group(function(){
         Route::post('dashboard/identity_verification',[Home::class,'verifyAccount']);
         Route::post('dashboard/identity_verification_doc',[Home::class,'verifyAccountDoc']);
         Route::get('dashboard/get_receive_wallet/{asset}',[Home::class,'getReceiveWallet']);
+        Route::get('dashboard/get_user_fiat',[Home::class,'getUserCurrency']);
     });
     //Logout Route
     Route::get('account/logout',[Login::class,'logout']);
