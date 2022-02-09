@@ -37,7 +37,7 @@ var withdrawalRequests = function (){
                 $('input[name="rate"]').val('0');
             }));
             $('select[name="asset"]').on('change',(function(e) {
-                var base_curr = $("input[name='base_curr']").val();
+                var base_curr = $("select[name='base_curr']").val();
                 var fiat =$("input[name='fiat']").val();
                 var crypto = $(this).val();
 
@@ -169,10 +169,94 @@ var withdrawalRequests = function (){
             }));
         }));
     }
+    var showWithdrawalDestination = function(){
+        $('select[name="destination"]').on('change',(function(e) {
+            var destination = $(this).val();
+            if (destination == 1) {
+                $('#dest_detail').hide();
+            } else {
+                $('#dest_detail').show();
+            }
+        }));
+    }
+     //initiate transfer
+     var initiateTransfer = function () {
+        $('#withdraw').submit(function(e) {
+            e.preventDefault();
+            var baseURL=$('#withdraw').attr('action');
+            $.ajaxSetup({
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                }
+            });
+            $.ajax({
+                url: baseURL,
+                method: "POST",
+                data:$(this).serialize(),
+                dataType:"json",
+                beforeSend:function(){
+                    $('#submit_send').attr('disabled', true);
+                    $("#withdraw :input").prop("readonly", true);
+                    $("#submit_send").LoadingOverlay("show",{
+                        text        : "initiating",
+                        size        : "20"
+                    });
+                },
+                success:function(data)
+                {
+                    if(data.error)
+                    {
+                        toastr.options = {
+                            "closeButton" : true,
+                            "progressBar" : true
+                        }
+                        toastr.error(data.data.error);
+                        //return to natural stage
+                        setTimeout(function(){
+                            $('#submit_send').attr('disabled', false);
+                            $("#withdraw :input").prop("readonly", false);
+                            $("#submit_send").LoadingOverlay("hide");
+                        }, 3000);
+                    }
+                    if(data.success)
+                    {
+                        toastr.options = {
+                            "closeButton" : true,
+                            "progressBar" : true
+                        }
+                        toastr.success(data.message);
+                        //return to natural stage
+                        setTimeout(function(){
+                            $('#submit_send').attr('disabled', false);
+                            $("#withdraw :input").prop("readonly", false);
+                            $("#submit_send").LoadingOverlay("hide");
+                            location.reload();
+                        }, 3000);
+                    }
+                },
+                error: function(jqXHR, textStatus, errorThrown){
+                    toastr.options = {
+                        "closeButton" : true,
+                        "progressBar" : true
+                    }
+                    toastr.error(errorThrown);
+                    //return to natural stage
+                    setTimeout(function(){
+                        $('#withdraw :input').prop('readonly', false);
+                        $("#submit_send").LoadingOverlay("hide");
+                        $('#submit_send').attr('disabled', false);
+                    }, 3000);
+                }
+
+            });
+        });
+    }
     return {
         init: function() {
             checkBaseCurrency();
             getWithdrawalRate();
+            showWithdrawalDestination();
+            initiateTransfer();
         }
     };
 }();

@@ -7,20 +7,24 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class AccountLogin extends Notification
+class NotifyUser extends Notification
 {
     use Queueable;
     public $name;
-    public $ip;
+    public $message;
+    public $subject;
+    public $url;
     /**
      * Create a new notification instance.
      *
      * @return void
      */
-    public function __construct($name,$ip)
+    public function __construct($name,$message,$subject,$url)
     {
         $this->name = $name;
-        $this->ip = $ip;
+        $this->message = $message;
+        $this->subject = $subject;
+        $this->url = $url;
     }
 
     /**
@@ -43,12 +47,11 @@ class AccountLogin extends Notification
     public function toMail($notifiable)
     {
         return (new MailMessage)
-                    ->subject('Account Login')
+                    ->subject($this->subject)
                     ->greeting('Hello '.$this->name)
-                    ->line('Your account on '.env('APP_NAME').' was currently accessed from an IP '.$this->ip.'.
-                    If this was not you, reset your account details and log out on every devices.')
-                    ->action('Dashboard', url('login'))
-                    ->line('Thank you for using '.env('APP_NAME'));
+                    ->line($this->message)
+                    ->action('Take Action', $this->url)
+                    ->line('Thank you for using '.config('app.name'));
     }
 
     /**

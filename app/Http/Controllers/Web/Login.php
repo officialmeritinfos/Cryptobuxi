@@ -75,7 +75,7 @@ class Login extends BaseController
                     $success['loggedIn'] = true;
                     $success['account_type']=$authUser->accountType;
                     $success['is_admin']=$authUser->is_admin;
-                    $success['redirect_to']='dashboard/index';
+                    $success['redirect_to']='account/dashboard';
                     return $this->sendResponse($success, 'User signed in');
                     break;
             }
@@ -96,7 +96,7 @@ class Login extends BaseController
         ];
         return view('auth.confirm_login',$viewData);
     }
-    public function verifyLogin($email,$hash){
+    public function verifyLogin($email,$hash,Request $request){
         $exists = TwoWay::where('email',$email)->orderBy('id','desc')->first();
         if(!empty($exists)){
             //check if the token matches the sent token
@@ -112,7 +112,7 @@ class Login extends BaseController
                 ];
                 $update = User::where('id',$user->id)->update($dataUser);
                 if($update){
-                    $user->notify(new AccountLogin($user->name));
+                    event(new LoginMail($user,$request->ip()));
                     Auth::loginUsingId($user->id);
                     //delete all logins
                     TwoWay::where('user',$user->id)->delete();

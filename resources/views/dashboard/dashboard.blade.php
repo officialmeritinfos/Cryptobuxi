@@ -39,7 +39,20 @@
                                 {{number_format($balance->availableBalance,5)}} {{$balance->asset}}
                             </h3>
                         </div>
-
+                        <div class="ml-auto text-right">
+                            <p class=" mb-0">
+                                @php
+                                    $rate = $options->getCryptoExchange($balance->asset,$user->majorCurrency)
+                                @endphp
+                                {{$user->majorCurrency}} {{number_format($rate,4)}}
+                            </p>
+                            <p class=" mb-1">
+                                @php
+                                    $rate = $options->getCryptoExchange($balance->asset,$user->majorCurrency)
+                                @endphp
+                                {{$user->majorCurrency}} {{number_format($rate*$balance->availableBalance,2)}}
+                            </p>
+                        </div>
                     </div>
                 </div>
             </div>

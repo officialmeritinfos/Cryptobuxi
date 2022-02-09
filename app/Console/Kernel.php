@@ -25,15 +25,15 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule)
     {
         // $schedule->command('inspire')->hourly();
-        $schedule->command('create:systemAccount')->everyMinute();
-        $schedule->command('create:systemTokenAccount')->everyMinute();
-        $schedule->command('create:userWallet')->everyMinute();
-        $schedule->command('create:userTokenWallet')->everyMinute();
-        $schedule->command('initialize:systemSubscription')->everyMinute();
-        $schedule->command('initialize:userWalletSubscription')->everyMinute();
-        $schedule->command('initialize:userTradingBalance')->everyMinute();
-        $schedule->command('initialize:userLoanBalance')->everyMinute();
-        $schedule->command('cache:cryptoRates')->everyMinute();
+        $schedule->command('create:systemAccount')->everyFourMinutes()->withoutOverlapping();
+        $schedule->command('create:systemTokenAccount')->everyFourMinutes()->withoutOverlapping();
+        $schedule->command('create:userWallet')->everyMinute()->withoutOverlapping();
+        $schedule->command('create:userTokenWallet')->everyMinute()->withoutOverlapping();
+        $schedule->command('initialize:systemSubscription')->everyMinute()->withoutOverlapping();
+        $schedule->command('initialize:userWalletSubscription')->everyMinute()->withoutOverlapping();
+        $schedule->command('initialize:userTradingBalance')->everyFourMinutes()->withoutOverlapping();
+        $schedule->command('initialize:userLoanBalance')->everyFourMinutes()->withoutOverlapping();
+        $schedule->command('cache:cryptoRates')->everyMinute()->withoutOverlapping();
 
     }
 

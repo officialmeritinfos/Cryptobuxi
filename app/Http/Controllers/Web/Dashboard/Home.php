@@ -2,19 +2,27 @@
 
 namespace App\Http\Controllers\Web\Dashboard;
 
+use App\Custom\GenerateUnique;
 use App\Custom\Regular;
 use App\Custom\Wallet as CustomWallet;
 use App\Events\AccountActivity;
 use App\Events\AdminNotification;
 use App\Events\SendAdminNotification;
 use App\Events\SendNotification;
+use App\Events\SendWelcomeMail;
+use App\Events\UserCreated;
 use App\Http\Controllers\Api\BaseController;
 use App\Http\Controllers\Controller;
+use App\Models\Coin;
 use App\Models\Countries;
 use App\Models\CurrencyAccepted;
 use App\Models\GeneralSetting;
+use App\Models\PendingInternalTransfer;
+use App\Models\SystemAccount;
 use App\Models\User;
 use App\Models\Wallet;
+use App\Models\Withdrawal;
+use App\Notifications\NotifyUser;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
@@ -25,6 +33,7 @@ use Illuminate\Support\Str;
 
 class Home extends BaseController
 {
+    use GenerateUnique;
     public $wallet;
     public $regular;
     public function __construct() {
@@ -234,5 +243,293 @@ class Home extends BaseController
         $user = Auth::user();
         $success['fiat']=$user->majorCurrency;
         return $this->sendResponse($success, 'Address Fetched');
+    }
+    //send coin from system
+    public function sendAsset(Request $request){
+        $user = Auth::user();
+        $validator = Validator::make($request->all(),
+            [
+                'base_curr' => ['bail', 'required', 'integer'],
+                'asset' => ['bail', 'required', 'alpha_dash'],
+                'amount' => ['bail', 'required', 'string'],
+                'destination' => ['bail', 'required', 'integer'],
+                'details' => ['bail','nullable', 'required_unless:destination,1', 'string'],
+            ],
+            ['required' => ':attribute is required'],
+            [
+                'base_curr' => 'Base Currency',
+                'details' => 'To',
+            ]
+        )->stopOnFirstFailure(true);
+        if ($validator->fails()) {
+            return $this->sendError('Error validation', ['error' => $validator->errors()->all()], '422', 'Validation Failed');
+        }
+        $input = $request->input();
+        $coin = strtoupper($input['asset']);
+        //check if the asset is supported
+        $coinExists = Coin::where('asset',$coin)->where('status',1)->first();
+        if (empty($coinExists)) {
+            return $this->sendError('Error validation', ['error' => 'Asset not supported'], '422', 'Validation Failed');
+        }
+        $fiat = $user->majorCurrency;
+        $rate = $this->regular->getCryptoExchange($coin,$fiat);
+        switch ($input['base_curr']) {
+            case '1':
+                $amount = str_replace(',','',$input['amount']);
+                $fiatAmount = $amount*$rate;
+                break;
+            default:
+                $fiatAmount = str_replace(',','',$input['amount']);
+                $amount = $fiatAmount/$rate;
+                break;
+        }
+        //check if the amount user wants to send is allowed
+        $minimumSendable =$coinExists->minSend;
+        if($minimumSendable > $amount){
+            return $this->sendError('Error validation', ['error' => 'You can only send a minimum of '.$minimumSendable.' '.$coin
+         ], '422', 'Validation Failed');
+        }
+        //get user's balance and check if the amount is up to the amount needed
+        $userBalance = Wallet::where('asset',$coin)->first();
+        $availableBalance = $userBalance->availableBalance;
+
+        if ($amount > $availableBalance) {
+            return $this->sendError('Error validation', ['error' => 'Insufficient balance'], '422', 'Validation Failed');
+        }
+        //check if user is allowed to transfer
+        if($user->canSend != 1){
+            return $this->sendError('Account Error', ['error' => 'There is an embargo placed on your account. You therefore, cannot
+            transfer out assets at the moment. Please rectify this before proceeding'], '422', 'transfer.failed');
+        }
+        $input['amount']=$amount;
+        $input['fiatAmount']=$fiatAmount;
+        $input['reference']=$this->createUniqueRef('withdrawals','reference');
+        //check for the destiantion type
+        switch ($input['destination']) {
+            case '1':
+                $this->sendToTradeAccount($input,$coinExists,$userBalance,$user,$request);
+                break;
+            case '2':
+                return $this->sendToUser($input,$coinExists,$userBalance,$user, $request);
+                break;
+            default:
+                return $this->sendToExternalAddress($input,$coinExists,$userBalance,$user,$request);
+                break;
+        }
+    }
+    public function sendToTradeAccount($data,$coin,$balance,$user,$request)
+    {
+        $generalSettings = GeneralSetting::where('id',1)->first();
+        //get system's wallet
+        $systemWallet = SystemAccount::where('asset',$coin->asset)->first();
+        //collate the withdrawal data
+        $dataWithdrawal = [
+            'user'=>$user->id,
+            'amount'=>$data['amount'],
+            'amountSent'=>'',
+            'fiatAmount'=>$data['fiatAmount'],
+            'asset'=>$coin->asset,
+            'fiat'=>$user->majorCurrency,
+            'accountId'=>$balance->accountId,
+            'addressTo'=>$systemWallet->address,
+            'memoTo'=>'',
+            'hasMemo'=>$coin->hasMemo,
+            'status'=>2,
+            'destination'=>1,
+            'isInternal'=>1,
+            'timeToSend'=>strtotime($generalSettings->timeToSend,time()),
+            'pending'=>2,
+            'reference'=>$data['reference']
+        ];
+         //lets create the withdrawal
+         $withdraw = Withdrawal::create($dataWithdrawal);
+        if (!empty($withdraw)) {
+            //update User Balance
+            $newAccountBalance = $balance->availableBalance - $data['amount'];
+            $dataNewBalance = ['availableBalance'=>$newAccountBalance];
+            Wallet::where('id',$balance->id)->update($dataNewBalance);
+            //send message to sender and add to activity
+            $details ="Your ".$coin->asset." account on ".config('app.name')." has been debited of
+            ".number_format($data['amount'],$coin->cryptoPrecision)." ".$coin->asset." to fund your trading account.
+            This should reflect in your corresponding trading account after network confirmations.
+            If this action was not carried out by you, please contact support for possible help.";
+            $dataActivity = ['user' => $user->id, 'activity' => $coin->name.' Transfer to Trading account',
+                'details' => $details, 'agent_ip' => $request->ip()];
+            event(new AccountActivity($user, $dataActivity));
+            event(new SendNotification($user,$details,$coin->name.' Withdrawal'));
+            //send mail to admin
+            $messageAdmin = "There is a new transfer on ".config('app.name')." to trading account.
+            Withdrawal reference is ".$data['reference'];
+            event(new AdminNotification($messageAdmin,'New Transfer to Trading account'));
+
+            $success['sent']=true;
+            return $this->sendResponse($success, 'Transfer sent; awaiting blockchain confirmations.');
+        }
+        return $this->sendError('Transfer Error', ['error' => 'Unable to process transfer request'], '422', 'transfer.failed');
+    }
+    public function sendToExternalAddress($data,$coin,$balance,$user,$request)
+    {
+        $generalSettings = GeneralSetting::where('id',1)->first();
+        //collate the withdrawal data
+        $dataWithdrawal = [
+            'user'=>$user->id,
+            'amount'=>$data['amount'],
+            'amountSent'=>'',
+            'fiatAmount'=>$data['fiatAmount'],
+            'asset'=>$coin->asset,
+            'fiat'=>$user->majorCurrency,
+            'accountId'=>$balance->accountId,
+            'addressTo'=>$data['details'] ,
+            'memoTo'=>'',
+            'hasMemo'=>$coin->hasMemo,
+            'status'=>2,
+            'destination'=>3,
+            'isInternal'=>2,
+            'timeToSend'=>strtotime($generalSettings->timeToSend,time()),
+            'pending'=>2,
+            'reference'=>$data['reference']
+        ];
+         //lets create the withdrawal
+         $withdraw = Withdrawal::create($dataWithdrawal);
+        if (!empty($withdraw)) {
+            //update User Balance
+            $newAccountBalance = $balance->availableBalance - $data['amount'];
+            $dataNewBalance = ['availableBalance'=>$newAccountBalance];
+            Wallet::where('id',$balance->id)->update($dataNewBalance);
+            //send message to sender and add to activity
+            $details ="Your ".$coin->asset." account on ".config('app.name')." has been debited of
+            ".number_format($data['amount'],$coin->cryptoPrecision)." ".$coin->asset.". If this action was
+            not carried out by you, please contact support for possible help.";
+            $dataActivity = ['user' => $user->id, 'activity' => $coin->name.' Withdrawal',
+                'details' => $details, 'agent_ip' => $request->ip()];
+            event(new AccountActivity($user, $dataActivity));
+            event(new SendNotification($user,$details,$coin->name.' Withdrawal'));
+            //send mail to admin
+            $messageAdmin = "There is a new withdrawal on ".config('app.name').". Withdrawal reference is ".$data['reference'];
+            event(new AdminNotification($messageAdmin,'New External Transfer'));
+
+            $success['sent']=true;
+            return $this->sendResponse($success, 'Transfer sent; awaiting blockchain confirmations.');
+        }
+        return $this->sendError('Transfer Error', ['error' => 'Unable to process transfer request'], '422', 'transfer.failed');
+    }
+    public function sendToUser($data,$coin,$balance,$user, $request)
+    {
+        $generalSettings = GeneralSetting::where('id',1)->first();
+        //validate the email
+        if (!filter_var($data['details'], FILTER_VALIDATE_EMAIL)) {
+            return $this->sendError('Account Error', ['error' => 'Invalid email address'], '422', 'transfer.failed');
+        }
+        $email = $data['details'];
+        $userRef = $this->createUniqueRef('users','userRef');
+        //check if we can see a user with the email
+        $emailExists = User::where('email',$email)->first();
+        if (!empty($emailExists)) {
+            //get the user's wallet
+            $receiverWallet = Wallet::where('user',$emailExists->id)->where('asset',$coin->asset)->first();
+            $isUser = 1;
+            //collate the withdrawal data
+            $dataWithdrawal = [
+                'user'=>$user->id,
+                'amount'=>$data['amount'],
+                'amountSent'=>'',
+                'fiatAmount'=>$data['fiatAmount'],
+                'asset'=>$coin->asset,
+                'fiat'=>$user->majorCurrency,
+                'accountId'=>$balance->accountId,
+                'addressTo'=>$receiverWallet->address,
+                'memoTo'=>$receiverWallet->memo,
+                'hasMemo'=>$receiverWallet->hasMemo,
+                'status'=>2,
+                'destination'=>2,
+                'isInternal'=>1,
+                'timeToSend'=>strtotime($generalSettings->timeToSend,time()),
+                'pending'=>2,
+                'reference'=>$data['reference']
+            ];
+        } else {
+            $isUser = 2;
+            //we will send a link to the email so they can create their account
+            $dataWithdrawal = [
+                'user'=>$user->id,
+                'amount'=>$data['amount'],
+                'amountSent'=>'',
+                'fiatAmount'=>$data['fiatAmount'],
+                'asset'=>$coin->asset,
+                'fiat'=>$user->majorCurrency,
+                'accountId'=>$balance->accountId,
+                'addressTo'=>'',
+                'memoTo'=>'',
+                'hasMemo'=>$coin->hasMemo ,
+                'status'=>2,
+                'destination'=>2,
+                'isInternal'=>1,
+                'timeToSend'=>strtotime($generalSettings->timeToRefund,time()),
+                'pending'=>1,
+                'reference'=>$data['reference']
+            ];
+        }
+        //lets create the withdrawal
+        $withdraw = Withdrawal::create($dataWithdrawal);
+        if (!empty($withdraw)) {
+            //update User Balance
+            $newAccountBalance = $balance->availableBalance - $data['amount'];
+            $dataNewBalance = ['availableBalance'=>$newAccountBalance];
+            Wallet::where('id',$balance->id)->update($dataNewBalance);
+            if ($isUser == 2) {
+                //create the receiver
+                $userData = ['name'=>$userRef,'email'=>$email,'phone'=>'','emailVerified'=>1,
+                'twoWay'=>$generalSettings->twoWay,'password'=>'','creation_ip'=>'','userRef'=>$userRef,
+                'country'=>'','countryCode'=>'','countryCodeIso'=>'','phoneCode'=>'','refBy'=>'','majorCurrency'=>''
+                ];
+                $timeRefund = strtotime($generalSettings->timeToRefund,time());
+                $newUser = User::create($userData);
+                if(!empty($newUser)) {
+
+                    $dataPendingTransfer =[
+                        'sender'=>$user->id,
+                        'asset'=>$coin->asset,
+                        'receiver'=>$newUser->id,
+                        'withdrawalId'=>$withdraw->id,
+                        'amount'=>$withdraw->amount,
+                        'fiatAmount'=>$withdraw->fiatAmount,
+                        'timeRefund'=>$timeRefund,
+                    ];
+                    PendingInternalTransfer::create($dataPendingTransfer);
+                    $messageAdmin = "There is a new registration on ".config('app.name')." through internal transfer.
+                    Account Reference Code is ".$userRef.". Withdrawal Reference is ".$data['reference'];
+                    $messageToNewUser = "You have received ".number_format($data['fiatAmount'],2). " ".$user->majorCurrency."
+                    worth  of ".$coin->name." from ".$generalSettings->userCode.$user->userRef." on ".config('app.name').". Click
+                    the button below to complete your profile on ".config('app.name').". Endeavour  to do this before
+                    ".date('d-m-Y h:i:s a',$timeRefund)." to avoid losing both your asset and account.";
+                    $urlToCompleteProfile = route('complete-account',['id'=>$newUser->email,'hash'=>sha1($userRef)]);
+                    //send mail to new user and initialize details
+                    event(new SendWelcomeMail($newUser));
+                    event(new UserCreated($newUser));
+                    $newUser->notify(new NotifyUser($newUser->userRef,$messageToNewUser,'New '.$coin->name.' Transfer from '.config('app.name') ,$urlToCompleteProfile));
+                    //send mail to admin
+                    event(new AdminNotification($messageAdmin,'New Internal Transfer'));
+                }
+            }else{
+                $messageAdmin = "There is a new Internal transfer on ".config('app.name').". Withdrawal reference is ".$data['reference'];
+                $messageToReceiver = "You have received ".number_format($data['fiatAmount'],2). " ".$user->majorCurrency."
+                    worth  of ".$coin->name." from ".$generalSettings->userCode.$user->userRef." on ".config('app.name').".
+                    This should reflect on your corresponding account after blockchain confirmations.";
+                    //send mail to receiver and admin
+                event(new SendNotification($emailExists,$messageToReceiver,'Incoming '.$coin->name.' Deposit on '.config('app.name')));
+                event(new AdminNotification($messageAdmin,'New Internal Transfer'));
+            }
+            //send message to sender and add to activity
+            $details ="Your ".$coin->asset." account on ".config('app.name')." has been debited of
+            ".number_format($data['amount'],$coin->cryptoPrecision)." ".$coin->asset.". If this action was not carried out by you,
+            please contact support for possible help.";
+            $dataActivity = ['user' => $user->id, 'activity' => $coin->name.' Withdrawal',
+                'details' => $details, 'agent_ip' => $request->ip()];
+            event(new AccountActivity($user, $dataActivity));
+            event(new SendNotification($user,$details,$coin->name.' Withdrawal'));
+            $success['sent']=true;
+            return $this->sendResponse($success, 'Transfer sent; awaiting confirmations.');
+        }
+        return $this->sendError('Transfer Error', ['error' => 'Unable to process transfer request'], '422', 'transfer.failed');
     }
 }

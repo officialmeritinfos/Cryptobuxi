@@ -90,8 +90,8 @@ class createUserWallet extends Command
                                         $this->generateDogeWallet($coin,$user);
                                         break;
                                     case 'SOL':
-                                            $this->generateSolWallet($coin,$user);
-                                            break;
+                                        $this->generateSolWallet($coin,$user);
+                                        break;
                                 }
                             }
                         }

@@ -115,7 +115,7 @@ class Register extends BaseController
                     break;
             }
             Auth::loginUsingId($user->id);
-            event(new AdminNotification('New Registration',$messageAdmin));
+            event(new AdminNotification($messageAdmin,'New Registration'));
             return $this->sendResponse($success, $message);
         }else{
             return $this->sendError('Error Creating account', ['error'=>'An error has occurred while creating your
@@ -158,5 +158,9 @@ class Register extends BaseController
             'email'=>$user->email
         ];
         return view('auth.verify_email',$viewData);
+    }
+    public function completeAccount($email,$hash)
+    {
+        # code...
     }
 }

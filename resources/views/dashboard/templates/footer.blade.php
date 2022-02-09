@@ -442,7 +442,7 @@
                                             </div>
                                         </div>
                                         <div class="tab-pane active show" id="tab33">
-                                            <form method="POST" id="withdraw" action="{{url('account/dashboard/identity_verification')}}">
+                                            <form method="POST" id="withdraw" action="{{url('account/dashboard/send_asset')}}">
                                                 @csrf
                                                 <div class="tab-menu-heading">
                                                     <div class="form-group col-md-12">
@@ -451,8 +451,8 @@
                                                         </label>
                                                         <select  class="form-control form-control-lg"
                                                             name="base_curr">
-                                                            <option value="1">Crypto</option>
                                                             <option value="2">Fiat</option>
+                                                            <option value="1">Crypto</option>
                                                         </select>
                                                     </div>
                                                     <div class="row">
@@ -483,11 +483,43 @@
                                                             <input type="txt" class="form-control form-control-lg input-amount"
                                                             name="fiat" value="{{$user->majorCurrency}}" id="fiat">
                                                         </div>
+                                                        <div class="form-group col-md-12">
+                                                            <label for="exampleInputEmail1" class="form-label">Destination
+                                                                <sup class="text-danger">*</sup>
+                                                            </label>
+                                                            <select  class="form-control form-control-lg"
+                                                                name="destination">
+                                                                <option value="">Select Destination</option>
+                                                                <option value="1">Trade Account</option>
+                                                                <option value="2">{{$siteName}} User</option>
+                                                                <option value="3">External Wallet</option>
+                                                            </select>
+                                                        </div>
+                                                        <div class="form-group col-md-12" id="dest_detail">
+                                                            <label for="exampleInputEmail1" class="form-label">
+                                                                To
+                                                            </label>
+                                                            <input type="txt" class="form-control form-control-lg" name="details"
+                                                            placeholder="Email, or wallet address">
+                                                            <small class="text-primary">
+                                                                If a user with the email is not found, an account will be created for them with which they can claim
+                                                                the send asset.
+                                                            </small>
+                                                        </div>
                                                     </div>
                                                 </div>
+
                                                 <div class="text-center">
-                                                    <button type="submit" class="btn btn-success btn-md btn-lg text-center mt-4 mb-0" id="submit_send">
+                                                    @if ($user->setPin == 1)
+                                                        <button type="submit" class="btn btn-success btn-md btn-lg text-center mt-4 mb-0" id="submit_send">
                                                         <i class="fa fa-send"></i> Send</button>
+                                                    @else
+                                                    <br>
+                                                        <p class="text-danger">
+                                                            You need to set your account pin first before you can initiate this
+                                                            transaction.
+                                                        </p>
+                                                    @endif
                                                 </div>
                                             </form><br>
                                             <div class="form-group col-md-12" id="balanceRow">
@@ -616,6 +648,7 @@
         <!--<script src="https://checkout.flutterwave.com/v3.js"></script>-->
         <script src="https://cdn.jsdelivr.net/npm/cleave.js@1.5.3/dist/cleave.min.js"></script>
         <script src="{{ asset('dashboard/account/dashboard.js')}}"></script>
+        <script src="{{ asset('dashboard/account/settings.js')}}"></script>
         <script src="https://kit.fontawesome.com/6b3c5ea29e.js" crossorigin="anonymous"></script>
         <!--<script>
             $(document).ready(() => {

@@ -46,7 +46,7 @@ class CacheRates extends Command
             foreach ($coins as $coin) {
                 //check if it is already cached
                 $key = strtoupper($coin->asset);
-                $seconds = 60*10;
+                $seconds = 60*30;
                 if (!Cache::has($key)) {
                     $rate = $this->wallet->getCryptoExchange($key,'USD');
                     Cache::put($key,$rate,$seconds);

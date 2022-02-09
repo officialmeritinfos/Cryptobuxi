@@ -44,8 +44,7 @@ class initializeSystemWalletSubscription extends Command
         $systemAccounts = SystemAccount::where('hasSub','!=',1)->get();
         if($systemAccounts->count() > 0){
             foreach ($systemAccounts as $systemAccount) {
-                $incomingLink = 'https://webhook.site/0395057d-2546-44d2-8683-6ed0e6435d47';
-                //url('transactions/incoming/'.$systemAccount->customId.'/account/'.$systemAccount->accountId);;
+                $incomingLink = url('transactions/trades/'.$systemAccount->customId.'/account/'.$systemAccount->accountId);
                 $dataIncoming=[
                     'type'              => 'ACCOUNT_INCOMING_BLOCKCHAIN_TRANSACTION',
                     'attr'              =>[
