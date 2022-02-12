@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\AccountActivity;
 use App\Models\ChargeClearance;
 use App\Models\ChargeWallet;
 use App\Models\Coin;
@@ -84,15 +85,31 @@ class Transactions extends Controller
                 'walletId'=>$wallet->id,
             ];
             $addToSyStemWallet = 2;
-
-            $update = Wallet::where('id',$balance->id)->update($dataBalance);
-            if ($update) {
-                Deposit::create($dataDeposit);
-                WalletTransaction::create($dataWalletTransaction);
-                $message ='Your '.config('app.name').' account has received some token. '.$amountToCredit.$asset.' was successfully deposited
-                into your account.';
-                $url = url('account/login');
-                $user->notify(new AccountNotification($user->name,$message,$url,'New Deposit of '.$amountToCredit.$asset));
+            //check if this transaction already exists
+            $depositExists = Deposit::where('user',$wallet->user)->where('transHash',$txId)->first();
+            if (!empty($depositExists)) {
+                //check if the amount is the same
+                if ($amountToCredit == $depositExists->amount) {
+                    $add = 2;
+                }else{
+                    $add = 1;
+                }
+            }else{
+                $add = 1;
+            }
+            if($add == 1){
+                $update = Wallet::where('id',$balance->id)->update($dataBalance);
+                if ($update) {
+                    Deposit::create($dataDeposit);
+                    WalletTransaction::create($dataWalletTransaction);
+                    $message ='Your '.config('app.name').' account has received some token. '.$amountToCredit.$asset.' was successfully deposited
+                    into your account.';
+                    $url = url('account/login');
+                    $user->notify(new AccountNotification($user->name,$message,$url,'New Deposit of '.$amountToCredit.$asset));
+                    $details = 'Your '.config('app.name').' account received a deposit of '.$amountToCredit.$asset;
+                    $dataActivity = ['user' => $user->id, 'activity' => $asset.' Deposit', 'details' => $details, 'agent_ip' => $request->ip()];
+                    event(new AccountActivity($user, $dataActivity));
+                }
             }
         }
     }

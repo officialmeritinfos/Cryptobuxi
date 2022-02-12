@@ -4,6 +4,7 @@ use App\Http\Controllers\Transactions;
 use App\Http\Controllers\Web\Dashboard\AccountWallet;
 use App\Http\Controllers\Web\Dashboard\Activities;
 use App\Http\Controllers\Web\Dashboard\Home;
+use App\Http\Controllers\Web\Dashboard\Referrals;
 use App\Http\Controllers\Web\Dashboard\Settings;
 use App\Http\Controllers\Web\HomeController;
 use App\Http\Controllers\Web\Login;
@@ -81,7 +82,11 @@ Route::middleware(['auth'])->group(function(){
         Route::get('activities',[Activities::class,'index']);
         Route::get('logins',[Activities::class,'logins']);
         /*=========== WALLET ROUTES =======================*/
-        Route::get('logins',[AccountWallet::class,'index']);
+        Route::get('account_wallet',[AccountWallet::class,'index']);
+        Route::get('account_wallet/{ref}/details',[AccountWallet::class,'details']);
+        /*=========== REFERRAL ROUTES =======================*/
+        Route::get('referrals',[Referrals::class,'index']);
+        Route::get('referrals/earnings',[Referrals::class,'earnings']);
     });
     //Logout Route
     Route::get('account/logout',[Login::class,'logout']);

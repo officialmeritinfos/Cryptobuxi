@@ -20,6 +20,7 @@ use App\Models\GeneralSetting;
 use App\Models\PendingInternalTransfer;
 use App\Models\SystemAccount;
 use App\Models\User;
+use App\Models\UserBalance;
 use App\Models\Wallet;
 use App\Models\Withdrawal;
 use App\Notifications\NotifyUser;
@@ -45,12 +46,14 @@ class Home extends BaseController
         $web = GeneralSetting::where('id',1)->first();
         $user  = Auth::user();
         $balances = Wallet::where('user',$user->id)->get();
+        $fiatBalances = UserBalance::where('user',$user->id)->get();
         $viewData = [
             'siteName'=>$web->siteName,
             'pageName'=>'Dashboard',
             'web'=>$web,
             'user'=>$user,
-            'balances'=>$balances
+            'balances'=>$balances,
+            'fiatBalances'=>$fiatBalances
         ];
         return view('dashboard.dashboard',$viewData);
     }

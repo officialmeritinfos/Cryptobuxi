@@ -60,4 +60,34 @@
     @endforeach
 </div>
 <!--End Row-->
+
+<div class="row">
+    @foreach($fiatBalances as $fiat_bal)
+        <div class="col-xl-6 col-lg-6 col-md-12">
+            <div class="card">
+                <div class="card-body text-center">
+                    <span class="fs-50 icon-muted"><i class="si si-wallet icon-dropshadow-danger text-success"></i></span>
+                    <p class=" mb-1 ">Available Balance </p>
+                    <h2 class="mb-1 fs-40 font-weight-bold">{{$fiat_bal->currency}} {{number_format($fiat_bal->availableBalance,2)}}</h2>
+                    <small class="mb-1 text-muted">
+                        <button class="btn btn-outline-primary btn-sm" data-backdrop="static" data-keyboard="false"
+                                data-toggle="modal" data-target="#add_money">Add Money
+                        </button>
+                    </small>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-6 col-lg-6 col-md-12">
+            <div class="card">
+                <div class="card-body text-center">
+                    <span class="fs-50 icon-muted"><i class="si si-wallet icon-dropshadow-danger text-danger"></i></span>
+                    <p class=" mb-1 ">Held Balance </p>
+                    <h2 class="mb-1 fs-40 font-weight-bold">{{$fiat_bal->currency}} {{number_format($fiat_bal->frozenBalance,2)}}</h2>
+                </div>
+            </div>
+        </div>
+    @endforeach
+</div>
+
+
 @include('dashboard.templates.footer')
