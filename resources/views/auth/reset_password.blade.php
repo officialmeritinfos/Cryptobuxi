@@ -67,7 +67,7 @@
 										<div class="card p-4">
 											<div class="card-body">
 												<div class="text-center title-style mb-6">
-													<h1 class="mb-2">Sign in to {{$siteName}}</h1>
+													<h1 class="mb-2">Reset {{$siteName}} Account Details</h1>
 													<hr>
 												</div>
                                                 <form method="post"
