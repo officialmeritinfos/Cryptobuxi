@@ -2,13 +2,15 @@
 <script>
     var cleave = new Cleave('.input-amount', {
         numeral: true,
-        numeralThousandsGroupStyle: 'thousand'
+        numeralThousandsGroupStyle: 'thousand',
+        numeralDecimalScale: 20
     });
 </script>
 <script>
     var cleave = new Cleave('.fiat-amount', {
         numeral: true,
-        numeralThousandsGroupStyle: 'thousand'
+        numeralThousandsGroupStyle: 'thousand',
+        numeralDecimalScale: 20
     });
 </script>
 <script src="{{ asset('dashboard/account/check_withdrawal.js') }}"></script>

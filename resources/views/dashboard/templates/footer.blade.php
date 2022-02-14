@@ -1,6 +1,6 @@
 </div>
 </div>
-            @if($user->setPin!=1)
+        @if($user->setPin!=1)
             <!-- Show pin setting form-->
             <div class="modal" id="set_pin">
                 <div class="modal-dialog modal-dialog-centered text-center " role="document">
@@ -183,7 +183,20 @@
                                                     </a>
                                                 </div>
                                             @else
-
+                                                <div class="text-center">
+                                                    <div class="text-success px-4 py-2 br-3 mb-4 text-center" role="alert">
+                                                        <i class="fa fa-check-circle fa-10x"></i>
+                                                    </div>
+                                                    <h3 class="text-bolder">HURRAY !</h3>
+                                                    <p class="text-bold">
+                                                        You are eligible to get loans on {{$siteName}}. Click the button below to
+                                                        visit our loan center. Remember to read our terms governing loaning
+                                                        <a href="{{url('legal')}}" target="_blank">Here</a>
+                                                    </p>
+                                                    <a class="btn btn-lg btn-primary" href="{{url('account/loan_center')}}">
+                                                        Visit Loan Center
+                                                    </a>
+                                                </div>
                                             @endif
                                         </div>
 
@@ -506,6 +519,13 @@
                                                                 the send asset.
                                                             </small>
                                                         </div>
+                                                        <div class="form-group col-md-12">
+                                                            <label for="exampleInputEmail1" class="form-label">
+                                                               Account Pin
+                                                            </label>
+                                                            <input type="password" class="form-control form-control-lg input-amount"
+                                                            name="pin" maxlength="6" minlength="6">
+                                                        </div>
                                                     </div>
                                                 </div>
 
@@ -649,6 +669,7 @@
         <script src="https://cdn.jsdelivr.net/npm/cleave.js@1.5.3/dist/cleave.min.js"></script>
         <script src="{{ asset('dashboard/account/dashboard.js')}}"></script>
         <script src="{{ asset('dashboard/account/settings.js')}}"></script>
+        <script src="{{ asset('dashboard/account/loan.js')}}"></script>
         <script src="https://kit.fontawesome.com/6b3c5ea29e.js" crossorigin="anonymous"></script>
         <!--<script>
             $(document).ready(() => {

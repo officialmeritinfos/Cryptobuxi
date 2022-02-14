@@ -5,9 +5,9 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Loan extends Model
+class CryptoLoanReserve extends Model
 {
     use HasFactory;
-    protected $table = 'crypto_loans';
     protected $guarded=[];
+    protected $table=['loan_reserves'];
 }

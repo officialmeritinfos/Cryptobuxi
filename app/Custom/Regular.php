@@ -4,6 +4,7 @@ namespace App\Custom;
 use App\Models\Coin;
 use App\Models\Countries;
 use App\Models\CurrencyAccepted;
+use App\Models\UserTradingBalance;
 use App\Models\Wallet;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
@@ -78,6 +79,11 @@ class Regular{
     {
         $coin = Coin::where('asset',$asset)->first();
         return $coin->icon;
+    }
+    public function getWalletCoinName($asset)
+    {
+        $coin = Coin::where('asset',$asset)->first();
+        return $coin->name;
     }
     public function countries()
     {

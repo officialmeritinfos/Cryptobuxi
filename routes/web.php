@@ -4,6 +4,7 @@ use App\Http\Controllers\Transactions;
 use App\Http\Controllers\Web\Dashboard\AccountWallet;
 use App\Http\Controllers\Web\Dashboard\Activities;
 use App\Http\Controllers\Web\Dashboard\Home;
+use App\Http\Controllers\Web\Dashboard\Loans;
 use App\Http\Controllers\Web\Dashboard\Referrals;
 use App\Http\Controllers\Web\Dashboard\Settings;
 use App\Http\Controllers\Web\HomeController;
@@ -87,6 +88,14 @@ Route::middleware(['auth'])->group(function(){
         /*=========== REFERRAL ROUTES =======================*/
         Route::get('referrals',[Referrals::class,'index']);
         Route::get('referrals/earnings',[Referrals::class,'earnings']);
+        /*=========== LOAN ROUTES =======================*/
+        Route::get('loans',[Loans::class,'index']);
+        Route::get('loans/lended',[Loans::class,'lended']);
+        Route::get('loans/fiat',[Loans::class,'fiat']);
+        Route::get('loans/fiat_lended',[Loans::class,'fiatLended']);
+        Route::get('loan_center',[Loans::class,'loanCenter']);
+        Route::post('loans/create_crypto_loan_offering',[Loans::class,'createCryptoOffering']);
+
     });
     //Logout Route
     Route::get('account/logout',[Login::class,'logout']);

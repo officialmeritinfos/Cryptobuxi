@@ -257,6 +257,7 @@ class Home extends BaseController
                 'amount' => ['bail', 'required', 'string'],
                 'destination' => ['bail', 'required', 'integer'],
                 'details' => ['bail','nullable', 'required_unless:destination,1', 'string'],
+                'pin' => ['bail','required','numeric','digits:6'],
             ],
             ['required' => ':attribute is required'],
             [
@@ -268,6 +269,11 @@ class Home extends BaseController
             return $this->sendError('Error validation', ['error' => $validator->errors()->all()], '422', 'Validation Failed');
         }
         $input = $request->input();
+        //check for account Pin
+        $hashed = Hash::check($input['pin'],$user->transPin);
+        if (!$hashed) {
+            return $this->sendError('Error validation', ['error' => 'Invalid Account Pin'], '422', 'Validation Failed');
+        }
         $coin = strtoupper($input['asset']);
         //check if the asset is supported
         $coinExists = Coin::where('asset',$coin)->where('status',1)->first();
