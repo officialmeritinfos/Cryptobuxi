@@ -115,5 +115,10 @@ class Regular{
         }
         return $value;
     }
+    public function getUserBalance($user)
+    {
+        $balance = Wallet::where('user',$user)->get();
+        return $balance;
+    }
 }
 

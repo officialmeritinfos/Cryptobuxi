@@ -10,7 +10,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <meta name="copyright" content="{{$web->siteName}} is a registered trademark of Meritinfos LLC">
     <meta name="title" content="{{$pageName}}">
-    <meta name="description" content="{{$pageName}}">
+    <meta name="description" content="{{$web->siteDescription}}">
     <meta name="robots" content="index,follow">
     <meta name="author" content="Meritinfos LLC">
     <meta name="keywords" content="{{$web->siteTag}}"/>

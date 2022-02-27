@@ -94,7 +94,17 @@ Route::middleware(['auth'])->group(function(){
         Route::get('loans/fiat',[Loans::class,'fiat']);
         Route::get('loans/fiat_lended',[Loans::class,'fiatLended']);
         Route::get('loan_center',[Loans::class,'loanCenter']);
+        Route::get('loan_center/{ref}/details',[Loans::class,'cryptoLoanOfferingDetails']);
         Route::post('loans/create_crypto_loan_offering',[Loans::class,'createCryptoOffering']);
+        Route::post('loans/top_up_crypto_loan_offering',[Loans::class,'topUpCryptoLoanOffering']);
+        Route::post('loans/cancel_crypto_loan_offering',[Loans::class,'cancelCryptoLoanOffering']);
+        Route::post('loans/accept_crypto_loan_offering',[Loans::class,'acceptCryptoLoanOffering']);
+        Route::get('fiat_loan_center',[Loans::class,'fiatLoanCenter']);
+        Route::get('fiat_loan_center/{ref}/details',[Loans::class,'fiatLoanOfferingDetails']);
+        Route::post('loans/create_fiat_loan_offering',[Loans::class,'createFiatOffering']);
+        Route::post('loans/top_up_fiat_loan_offering',[Loans::class,'topUpFiatLoanOffering']);
+        Route::post('loans/cancel_fiat_loan_offering',[Loans::class,'cancelFiatLoanOffering']);
+        Route::post('loans/accept_fiat_loan_offering',[Loans::class,'acceptFiatLoanOffering']);
 
     });
     //Logout Route

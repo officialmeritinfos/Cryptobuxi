@@ -297,15 +297,16 @@
                 <!--Page header-->
                 <div class="page-header">
                     <div class="page-leftheader">
-                        <h4 class="page-title">{{$pageName}}</h4>
+                        <h6 class="page-title">{{$pageName}}</h6>
                     </div>
                     <div class="page-rightheader ml-auto d-lg-flex">
                         <div class="ml-5 mb-0 row">
                             <button class="btn btn-primary btn-md" data-toggle="modal" data-target="#buy_sell"
-                            style="margin-right:2px;">
+                            style="margin-right:2px;"margin-bottom:4px;" >
                                 Buy/Sell
                             </button>
-                            <button class="btn btn-dark btn-md" data-toggle="modal" data-target="#send_receive">
+                            <button class="btn btn-dark btn-md" data-toggle="modal" data-target="#send_receive"
+                            style="margin-right:2px;"margin-bottom:4px;" >
                                 Send/Receive
                             </button>
                         </div>

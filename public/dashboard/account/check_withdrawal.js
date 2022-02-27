@@ -251,12 +251,118 @@ var withdrawalRequests = function (){
             });
         });
     }
+    var getCoinRate =function(){
+        $('#amounts').on('keyup',(function() {
+            var amount = $(this).val();
+            baseUrl = '';
+            var fiat = $("input[name='fiats']").val();
+            var crypto = $("select[name='assets']").val();
+            var url = baseUrl+'/fiat_to_crypto/'+crypto+'/'+fiat+'/'+amount;
+            //send request to get user's balance
+            $.ajaxSetup({
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                }
+            });
+            $.ajax({
+                url: url,
+                method: "GET",
+                dataType:"json",
+                beforeSend:function(){
+                    $('#submit_send').attr('disabled', true);
+                    $('input[name="rates"]').LoadingOverlay("show",{
+                        text        : "please wait while we calculate",
+                        size        : "30"
+                    });
+                },
+                success:function(data)
+                {
+                    if(data.error)
+                    {
+                        console.log(data.data.error);
+                        //return to natural stage
+                        setTimeout(function(){
+                            $('#submit_accept').attr('disabled', false);
+                            $('input[name="rates"]').LoadingOverlay("hide");
+                        }, 3000);
+                    }
+                    if(data.success)
+                    {
+                        $('input[name="rates"]').val(data.data.rate);
+                        //return to natural stage
+                        $('#submit_send').attr('disabled', false);
+                        $('input[name="rates"]').LoadingOverlay("hide");
+                    }
+                },
+                error: function(jqXHR, textStatus, errorThrown){
+                    console.log(errorThrown);
+                    //return to natural stage
+                    $('input[name="rates"]').LoadingOverlay("hide");
+                    $('#submit_send').attr('disabled', false);
+                }
+
+            });
+            //if the base currency is changed
+            $('select[name="assets"]').on('change',(function(e) {
+                baseUrl = '';
+                var crypto = $(this).val();
+                var fiat = $("input[name='fiat']").val();
+                var url = baseUrl+'/fiat_to_crypto/'+crypto+'/'+fiat+'/'+amount;
+                $('input[name="rates"]').val('0');
+                //send request to get user's balance
+                $.ajaxSetup({
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    }
+                });
+                $.ajax({
+                    url: url,
+                    method: "GET",
+                    dataType:"json",
+                    beforeSend:function(){
+                        $('#submit_send').attr('disabled', true);
+                        $('input[name="rates"]').LoadingOverlay("show",{
+                            text        : "please wait while we calculate",
+                            size        : "30"
+                        });
+                    },
+                    success:function(data)
+                    {
+                        if(data.error)
+                        {
+                            console.log(data.data.error);
+                            //return to natural stage
+                            setTimeout(function(){
+                                $('#submit_send').attr('disabled', false);
+                                $('input[name="rates"]').LoadingOverlay("hide");
+                            }, 3000);
+                        }
+                        if(data.success)
+                        {
+                            $('input[name="rates"]').val(data.data.rate);
+                            //return to natural stage
+                            $('#submit_send').attr('disabled', false);
+                            $('input[name="rates"]').LoadingOverlay("hide");
+                        }
+                    },
+                    error: function(jqXHR, textStatus, errorThrown){
+                        console.log(errorThrown);
+                        //return to natural stage
+                        $('input[name="rates"]').LoadingOverlay("hide");
+                        $('#submit_send').attr('disabled', false);
+                    }
+
+                });
+            }));
+        }));
+    }
     return {
         init: function() {
             checkBaseCurrency();
             getWithdrawalRate();
             showWithdrawalDestination();
             initiateTransfer();
+            getCoinRate();
         }
     };
 }();
