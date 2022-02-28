@@ -254,7 +254,7 @@
                                 <div class="dropdown profile-dropdown">
                                     <a href="#" class="nav-link pr-0 leading-none" data-toggle="dropdown">
 										<span>
-                                             @if($user->isUploaded==1)
+                                            @if($user->isUploaded==1)
                                                 <img alt="User Avatar" class="avatar avatar-md brround" src="{{asset('user/photos/'.$user->photo)}}" style="width:40px;height:40px;">
                                             @else
                                                 <img src="https://ui-avatars.com/api/?name={{$user->name}}&rounded=true&background=random" alt="img"

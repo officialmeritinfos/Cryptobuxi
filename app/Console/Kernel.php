@@ -13,6 +13,8 @@ use App\Console\Commands\initializeUserWalletSubscription;
 use App\Console\Commands\initializeUserBalance;
 use App\Console\Commands\initializeUserLoanBalance;
 use App\Console\Commands\CacheRates;
+use App\Console\Commands\processLoanReturns;
+use App\Console\Commands\sendLoanReminder;
 
 class Kernel extends ConsoleKernel
 {
@@ -34,6 +36,8 @@ class Kernel extends ConsoleKernel
         $schedule->command('initialize:userTradingBalance')->everyFourMinutes()->withoutOverlapping();
         $schedule->command('initialize:userLoanBalance')->everyFourMinutes()->withoutOverlapping();
         $schedule->command('cache:cryptoRates')->everyMinute()->withoutOverlapping();
+        $schedule->command('process:LoanReturns')->everyMinute()->withoutOverlapping();
+        $schedule->command('send:LoanReminder')->twiceDailyAt('7','19')->withoutOverlapping();
 
     }
 

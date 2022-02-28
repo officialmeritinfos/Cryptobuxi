@@ -7,6 +7,7 @@ use App\Custom\Regular;
 use App\Custom\Wallet;
 use App\Http\Controllers\Controller;
 use App\Models\Coin;
+use App\Models\CryptoLoan;
 use App\Models\Deposit;
 use App\Models\FiatLoan;
 use App\Models\GeneralSetting;
@@ -49,12 +50,7 @@ class AccountWallet extends Controller
         }
         $coin = Coin::where('asset',$balance->asset)->first();
         $deposits = Deposit::where('user',$user->id)->where('asset',$balance->asset)->get();
-        $crypto_loans = Loan::where('asset',$balance->asset)->where('user',$request->user()->id)->orWhere('lender',$request->user()->id)->paginate(
-            $perPage = 15, $columns = ['*'], $pageName = 'crypto_loans'
-        );
-        $fiat_loans = FiatLoan::where('user',$request->user()->id)->orWhere('lender',$request->user()->id)->where('asset',$balance->asset)->paginate(
-            $perPage = 15, $columns = ['*'], $pageName = 'fiat_loans'
-        );
+
         $withdrawals = Withdrawal::where('user',$user->id)->where('asset',$balance->asset)->paginate(
             $perPage = 15, $columns = ['*'], $pageName = 'withdrawals'
         );
@@ -65,9 +61,7 @@ class AccountWallet extends Controller
             'user'=>$user,
             'balances'=>$balance,
             'deposits'=>$deposits,
-            'crypto_loans'=>$crypto_loans,
             'withdrawals'=>$withdrawals,
-            'fiat_loans'=>$fiat_loans,
             'coin'=>$coin
         ];
         return view('dashboard.wallet_details',$viewData);

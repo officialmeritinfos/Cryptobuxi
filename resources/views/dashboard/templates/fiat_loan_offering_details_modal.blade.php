@@ -1,6 +1,6 @@
 
  @if($user->id == $offering->user)
- <!-- Topup Crypto Loan Offer-->
+ <!-- Topup Fiat Loan Offer-->
  <div class="modal" id="topupCryptoLoan">
      <div class="modal-dialog modal-dialog-centered modal-md text-center " role="document">
          <div class="modal-content tx-size-sm">
@@ -57,7 +57,7 @@
      </div>
  </div>
 
- <!-- Cancel Crypto Loan Offer-->
+ <!-- Cancel Fiat Loan Offer-->
  <div class="modal" id="cancelCryptoLoanOffer">
      <div class="modal-dialog modal-dialog-centered modal-md text-center " role="document">
          <div class="modal-content tx-size-sm">
@@ -113,8 +113,8 @@
 
 @if ($user->id != $offering->user)
 @inject('wallets','App\Custom\Regular' )
-<!-- Accept Crypto Loan Offer-->
-<div class="modal" id="acceptCryptoLoanOffer">
+<!-- Accept Fiat Loan Offer-->
+<div class="modal" id="acceptFiatLoanOffer">
  <div class="modal-dialog modal-dialog-centered modal-md text-center " role="document">
      <div class="modal-content tx-size-sm">
          <div class="modal-header">
@@ -124,11 +124,11 @@
              </button>
          </div>
          <div class="modal-body text-left p-4" >
-             <form method="POST" id="cancel_crypto_offer_form" action="{{url('account/loans/accept_fiat_loan_offering')}}">
+             <form method="POST" id="accept_fiat_offer_form" action="{{url('account/loans/accept_fiat_loan_offering')}}">
                  @csrf
                  <div class="row">
                     <div class="form-group col-md-12">
-                        <label for="exampleInputEmail1" class="form-label">Asset</label>
+                        <label for="exampleInputEmail1" class="form-label">Collateral Asset</label>
                         <select  class="form-control form-control-lg" name="assets">
                             @foreach ($crypto_balances as $wallet)
                                 <option value="{{$wallet->asset}}">{{$wallet->name}}</option>
@@ -148,6 +148,21 @@
                             </label>
                         <input type="txt" class="form-control form-control-lg input-amount"
                         name="rates" readonly>
+                    </div>
+                    <div class="form-group col-md-6">
+                        <label for="exampleInputEmail1" class="form-label">Duration ({{$offering->durationType}})
+                            <sup class="text-danger" id="amount_curr">*</sup>
+                        </label>
+                        <input type="txt" class="form-control form-control-lg input-amount" name="duration"
+                        value="{{$offering->minimumDuration}}" id="durations" max="{{$offering->maximumDuration}}"
+                        min="{{$offering->minimumDuration}}">
+                    </div>
+                    <div class="form-group col-md-6" id="equi">
+                        <label for="exampleInputEmail1" class="form-label">Amount To Pay Back
+                            <sup class="text-success" id="payback"></sup>
+                            </label>
+                        <input type="txt" class="form-control form-control-lg input-amount"
+                        name="payback" readonly>
                     </div>
                     <div class="form-group col-md-6" style="display: none;">
                         <label for="exampleInputEmail1" class="form-label"></label>

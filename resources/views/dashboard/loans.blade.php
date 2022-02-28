@@ -42,7 +42,7 @@
                                                         <tr>
                                                             <td>
                                                                 <span class="badge badge-info break-text">
-                                                                    <a href="{{url('account/loans/collected/'.$loan->reference)}}" target="_blank">
+                                                                    <a href="{{url('account/loans/collected/'.$loan->reference)}}" >
                                                                         {{$loan->reference}}
                                                                     </a>
                                                                 </span>
@@ -117,7 +117,7 @@
                                                         <tr>
                                                             <td>
                                                                 <span class="badge badge-info break-text">
-                                                                    <a href="{{url('account/loans/sent/'.$loan->reference)}}" target="_blank">
+                                                                    <a href="{{url('account/loans/sent/'.$loan->reference)}}" >
                                                                         {{$loan->reference}}
                                                                     </a>
                                                                 </span>
@@ -185,7 +185,7 @@
                                                         <th class="border-bottom-0">Crypto Asset</th>
                                                         <th class="border-bottom-0">Crypto Amount</th>
                                                         <th class="border-bottom-0">APR</th>
-                                                        <th class="border-bottom-0">Duration</th>
+                                                        <th class="border-bottom-0">Repayment Day</th>
                                                         <th class="border-bottom-0">Time Received</th>
                                                         <th class="border-bottom-0">Status</th>
                                                     </tr>
@@ -195,7 +195,7 @@
                                                         <tr>
                                                             <td>
                                                                 <span class="badge badge-info break-text">
-                                                                    <a href="{{url('account/loans/fiat/collected/'.$loan->reference)}}" target="_blank">
+                                                                    <a href="{{url('account/loans/fiat/collected/'.$loan->reference)}}" >
                                                                         {{$loan->reference}}
                                                                     </a>
                                                                 </span>
@@ -205,7 +205,9 @@
                                                             <td>{{$loan->asset}}</td>
                                                             <td>{{$loan->cryptoAmount}}</td>
                                                             <td>{{$loan->apr}}%</td>
-                                                            <td>{{$loan->duration}}</td>
+                                                            <td>
+                                                                {{date('d-m-Y H:i:s a',$loan->payBackDate)}}
+                                                            </td>
                                                             <td>{{$loan->created_at}}</td>
                                                             <td>
                                                                 @switch($loan->status)
@@ -266,7 +268,7 @@
                                                         <th class="border-bottom-0">Crypto Asset</th>
                                                         <th class="border-bottom-0">Crypto Amount</th>
                                                         <th class="border-bottom-0">APR</th>
-                                                        <th class="border-bottom-0">Duration</th>
+                                                        <th class="border-bottom-0">Repayment Day</th>
                                                         <th class="border-bottom-0">Time Sent</th>
                                                         <th class="border-bottom-0">Status</th>
                                                     </tr>
@@ -276,7 +278,7 @@
                                                         <tr>
                                                             <td>
                                                                 <span class="badge badge-info break-text">
-                                                                    <a href="{{url('account/loans/fiat/sent/'.$loan->reference)}}" target="_blank">
+                                                                    <a href="{{url('account/loans/fiat/sent/'.$loan->reference)}}" >
                                                                         {{$loan->reference}}
                                                                     </a>
                                                                 </span>
@@ -286,7 +288,9 @@
                                                             <td>{{$loan->asset}}</td>
                                                             <td>{{$loan->cryptoAmount}}</td>
                                                             <td>{{$loan->apr}}%</td>
-                                                            <td>{{$loan->duration}}</td>
+                                                            <td>
+                                                                {{date('d-m-Y H:i:s a',$loan->payBackDate)}}
+                                                            </td>
                                                             <td>{{$loan->created_at}}</td>
                                                             <td>
                                                                 @switch($loan->status)

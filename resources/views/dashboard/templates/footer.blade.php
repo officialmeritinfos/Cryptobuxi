@@ -638,6 +638,11 @@
     <!-- popover js -->
     <script src="{{ asset('dashboard/assets/js/popover.js')}}"></script>
     <script src="{{ asset('dashboard/assets/js/jquery.qrcode.min.js')}}"></script>
+    <!-- Chat js-->
+    <script src="{{ asset('dashboard/assets/js/chat.js')}}"></script>
+    <!-- P-scroll js-->
+    <script src="{{ asset('dashboard/assets/plugins/p-scrollbar/p-scrollbar.js')}}"></script>
+    <script src="{{ asset('dashboard/assets/plugins/p-scrollbar/p-scroll1.js')}}"></script>
         <!-- Clipboard js -->
         <script src="{{ asset('dashboard/assets/plugins/clipboard/clipboard.min.js')}}"></script>
         <script src="{{ asset('dashboard/assets/plugins/clipboard/clipboard.js')}}"></script>

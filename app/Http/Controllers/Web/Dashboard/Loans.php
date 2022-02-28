@@ -10,6 +10,7 @@ use App\Events\AdminNotification;
 use App\Events\SendNotification;
 use App\Http\Controllers\Api\BaseController;
 use App\Http\Controllers\Controller;
+use App\Models\Charge;
 use App\Models\Coin;
 use App\Models\CryptoLoan;
 use App\Models\CryptoLoanOffering;
@@ -27,6 +28,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
+use Carbon\Carbon;
 
 class Loans extends BaseController
 {
@@ -499,6 +501,7 @@ class Loans extends BaseController
     }
     public function createFiatOffering(Request $request)
     {
+        $web = GeneralSetting::where('id',1)->first();
         $user = Auth::user();
         $validator = Validator::make($request->all(),
             [
@@ -545,6 +548,18 @@ class Loans extends BaseController
             }
         }else{
             $acceptsAll=1;
+        }
+        //check if the APR corresponds to minimum and maximum APR
+        $minApr = $web->loanRoiMin;
+        $maxApr = $web->loanRoiMax;
+
+        if ($input['apr']<$minApr) {
+            return $this->sendError('Error validation', ['error' => 'APR cannot be less than '.$minApr.'%'], '422',
+            'Validation Failed');
+        }
+        if ($input['apr']>$maxApr) {
+            return $this->sendError('Error validation', ['error' => 'APR cannot be greater than '.$maxApr.'%'], '422',
+            'Validation Failed');
         }
         //check if the asset is supported
         $currencyExists = CurrencyAccepted::where('code',$currency)->where('status',1)->first();
@@ -854,6 +869,8 @@ class Loans extends BaseController
             [
                 'id' => ['bail', 'required', 'numeric'],
                 'amount' => ['bail', 'required', 'string'],
+                'duration' => ['bail', 'required', 'numeric','integer'],
+                'assets' => ['bail', 'required', 'alpha_dash'],
                 'pin' => ['bail','required','numeric','digits:6'],
             ],
             ['required' => ':attribute is required'],
@@ -872,7 +889,7 @@ class Loans extends BaseController
         if (!$hashed) {
             return $this->sendError('Error validation', ['error' => 'Invalid Account Pin'], '422', 'Validation Failed');
         }
-        $offerExists = CryptoLoanOffering::where('reference',$input['id'])->where('user', '!=',$user->id)->first();
+        $offerExists = FiatLoanOffering::where('reference',$input['id'])->where('user', '!=',$user->id)->first();
         if (empty($offerExists)) {
             return $this->sendError('Error validation', ['error' => 'Unauthorized Action. Please contact support'],
             '422', 'Validation Failed');
@@ -882,24 +899,93 @@ class Loans extends BaseController
             '422', 'Validation Failed');
         }
         //check if user is on a loan before
-        $userIsOnCryptoLoan = CryptoLoan::where('user',$user->id)->where('isPaidBack',2)->first();
+        $userIsOnCryptoLoan = FiatLoan::where('user',$user->id)->where('isPaid',2)->first();
         if (!empty($userIsOnCryptoLoan)) {
             return $this->sendError('Error validation', ['error' => 'You have an unpaid loan. Please clear up
             your loan(s) first before requesting for another one.'],'422', 'Validation Failed');
         }
-        $coin = $offerExists->asset;
-         //check if the asset is supported
-         $coinExists = Coin::where('asset',$coin)->where('status',1)->first();
-         if (empty($coinExists)) {
-             return $this->sendError('Error validation', ['error' => 'Asset not supported'], '422', 'Validation Failed');
-         }
+        $currency = $offerExists->currency;
+        $coin = $input['assets'];
+        //check if the currency is supported
+        $currencyExists = CurrencyAccepted::where('code',$currency)->where('status',1)->first();
+        if (empty($currencyExists)) {
+            return $this->sendError('Error validation', ['error' => 'Currency not supported'], '422', 'Validation Failed');
+        }
+        //check if the asset is supported
+        $coinExists = Coin::where('asset',$coin)->where('status',1)->first();
+        if (empty($coinExists)) {
+            return $this->sendError('Error validation', ['error' => 'Asset not supported'], '422', 'Validation Failed');
+        }
+        //get the exchange rate of the requested amount in the cryptocurrency rate
+        $rate = $this->regular->getCryptoExchange($coin,$offerExists->currency);
+        $cryptoAmount = $amount/$rate;
+
+        //get the Loan Reserve
+        $offerReserve = FiatLoanReserve::where('reference',$offerExists->reference)->first();
+        $offerBalance = $offerReserve->availableBalance;
+
         //get trading balance of the user
         $userTradingBalance = UserTradingBalance::where('user',$user->id)->where('asset',$coin)->first();
+        $userBalance = UserBalance::where('user',$user->id)->where('currency',$currency)->first();
         $amountListed = $offerExists->amount;
-        $balance = $offerExists->availableBalance;
+        $minAmount = $offerExists->minimumAmount;
+        $maxAmount = $offerExists->maximumAmount;
+        $minDuration = $offerExists->minimumDuration;
+        $maxDuration = $offerExists->maximumDuration;
+        $durationListed = $offerExists->duration;
+        $duration = $input['duration'];
+        //lets do small computations
+         //get the interval
+         $interval = Interval::where('name',$offerExists->durationType)->first();
+         /** Well, since the APR is on a yearly basis, we will always divide by a year to
+         *  Get the daily supposed return, that will make up for the supposed
+         */
+        $roi = $offerExists->apr;
+        $dailyRoi = $roi/365;
+        $totalRoiPercent = $dailyRoi*$duration*$interval->roi;
+        $payBackRoi = $totalRoiPercent/100;
+        $interest = $payBackRoi*$amount;
+        $paybackAmount = $interest+$amount;
+        $cryptoPayBackRate = $paybackAmount/$rate;
         //check if the borrower's amount corresponds
         if($amountListed < $amount){
             return $this->sendError('Error validation', ['error' => 'Your requested amount is greater than the amount listed.'],
+            '422', 'Validation Failed');
+        }
+        //check if the borrower's amount corresponds
+        if($offerBalance < $amount){
+            return $this->sendError('Error validation', ['error' => 'Your requested amount is greater than the available amount.'],
+            '422', 'Validation Failed');
+        }
+        //check if the borrower's amount corresponds
+        if($minAmount > $amount){
+            return $this->sendError('Error validation', ['error' => 'Your requested amount is less than the minimum loanable amount.'],
+            '422', 'Validation Failed');
+        }
+        //check if the borrower's amount corresponds
+        if($maxAmount < $amount){
+            return $this->sendError('Error validation', ['error' => 'Your requested amount is greater than the maximum loanable amount.'],
+            '422', 'Validation Failed');
+        }
+        //check if the borrower's duration corresponds
+        if($duration < $minDuration){
+            return $this->sendError('Error validation', ['error' => 'Loan Duration cannot be sooner than the minimum duration'],
+            '422', 'Validation Failed');
+        }
+        //check if the borrower's amount corresponds
+        if($duration > $durationListed){
+            return $this->sendError('Error validation', ['error' => 'Loan Duration cannot be longer than the duration'],
+            '422', 'Validation Failed');
+        }
+        //check if the borrower's amount corresponds
+        if($maxDuration < $duration){
+            return $this->sendError('Error validation', ['error' => 'Loan Duration cannot be longer than the maximum duration'],
+            '422', 'Validation Failed');
+        }
+        //check if the borrower has enough amount to cover the interest and principal
+        if($cryptoPayBackRate > $userTradingBalance->availableBalance){
+            return $this->sendError('Error validation', ['error' => 'You do not have sufficient balance in your '.$coin.' trading
+            balance. Please fund it before proceeding.'],
             '422', 'Validation Failed');
         }
         //check if user is allowed to make loan
@@ -908,62 +994,278 @@ class Loans extends BaseController
             '422', 'Validation Failed');
         }
 
+
         //if everything checks out well
         $reference = $this->createUniqueRef('crypto_loans','reference');
-        $rate = $this->regular->getCryptoExchange($coin,$offerExists->fiat);
-        $fiatAmount = $rate*$amount;
-        $newBalance = $userTradingBalance->availableBalance+$amount;
+        $newBalance = $userTradingBalance->availableBalance-$cryptoPayBackRate;
+        $durations = $input['duration'].' '.$offerExists->durationType;
+        $paybackTime = strtotime($durations,time());
         $dataLoan =[
             'reference'=>$reference,
             'offeringId'=>$offerExists->id,
             'user'=>$user->id,
+            'fiatAmount'=>$amount,
+            'fiat'=>$offerExists->currency,
             'asset'=>$coin,
-            'amount'=>$amount,
-            'apr'=>$offerExists->resellRate,
+            'cryptoAmount'=>$cryptoPayBackRate,
             'lender'=>$offerExists->user,
-            'fiat'=>$offerExists->fiat,
-            'fiatAmount'=>$fiatAmount,
-            'status'=>2
+            'payBackDate'=>$paybackTime,
+            'status'=>2,
+            'apr'=>$offerExists->apr,
+            'isApproved'=>1,
+            'dateApproved'=>time(),
+            'amountToPayBack'=>$paybackAmount,
+            'interest'=>$interest,
+            'dailyAddition'=>$dailyRoi/100*$amount,
+            'dailyPercent'=>$dailyRoi,
+            'timeToAdd'=>strtotime('Tomorrow',time()),
+            'numberOfRepeat'=>$duration*$interval->roi
         ];
-        $newOfferBalance =$balance-$amount;
-        $dataLoanOffering = [
+        $newOfferBalance =$offerBalance-$amount;
+        $newUserBalance = $userBalance->availableBalance+$amount;
+
+        $dataLoanOfferingReserve = [
             'availableBalance'=>$newOfferBalance
         ];
         $dataTradingBalance =[
             'availableBalance'=>$newBalance
         ];
+        $dataUserBalance =[
+            'availableBalance'=>$newUserBalance
+        ];
         $offerOwner= User::where('id',$offerExists->user)->first();
-        $create = CryptoLoan::create($dataLoan);
+        $create = FiatLoan::create($dataLoan);
         if (!empty($create)) {
             UserTradingBalance::where('id',$userTradingBalance->id)->update($dataTradingBalance);
-            CryptoLoanOffering::where('id',$offerExists->id)->update($dataLoanOffering);
+            FiatLoanReserve::where('id',$offerReserve->id)->update($dataLoanOfferingReserve);
+            UserBalance::where('id',$userBalance->id)->update($dataUserBalance);
 
             /* ========ADD ACTIVITIES TO BOTH PARTIES ================*/
-            $borrowerDetails = 'A loan of '.number_format($amount,5).$coin.' was issued to you with reference '.$reference;
-            $lenderDetails = 'A loan of '.number_format($amount,5).$coin.' has been issued from your offering with reference
+            $borrowerDetails = 'A loan of '.$currency.number_format($amount,2).' was issued to you with reference '.$reference;
+            $lenderDetails = 'A loan of '.$currency.number_format($amount,2).' has been issued from your offering with reference
             '.$offerExists->reference;
-            $dataActivity = ['user' => $user->id, 'activity' => 'New Crypto Lending','details' => $borrowerDetails, 'agent_ip' => $request->ip()];
-            $dataActivityOwner = ['user' => $offerOwner->id, 'activity' => 'New Crypto Lending Alert','details' => $lenderDetails, 'agent_ip' => $request->ip()];
+            $dataActivity = ['user' => $user->id, 'activity' => 'New Fiat Lending','details' => $borrowerDetails, 'agent_ip' => $request->ip()];
+            $dataActivityOwner = ['user' => $offerOwner->id, 'activity' => 'New Fiat Lending Alert','details' => $lenderDetails, 'agent_ip' => $request->ip()];
             event(new AccountActivity($user, $dataActivity));
             event(new AccountActivity($offerOwner, $dataActivityOwner));
 
            /* ========SEND MAIL TO BOTH PARTIES AND ADMIN ================*/
-           $mailToBorrower = 'Your loan request of <b>'.number_format($amount,5).$coin.'</b> has been approved and
-           your <b>'.$coin.'</b> Trading account subsequently funded. Your Crypto Loan Reference is <b>'.$reference.'</b>.';
-           $mailToLender = 'A loan request of <b>'.number_format($amount,5).$coin.'</b> from your offer with reference '.$offerExists->reference.'
-           has been approved and offer debited. New Available balance is '.$newOfferBalance.'. Crypto Loan Reference is <b>'.$reference.'</b>';
-           $mailToAdmin = 'A loan request of <b>'.number_format($amount,5).$coin.'</b> has been approved.
-           Crypto Loan Reference is <b>'.$reference.'</b>.';
+           $mailToBorrower = 'Your loan request of <b>'.$currency.number_format($amount,2).'</b> has been approved and
+           your <b>'.$currency.'</b> account subsequently funded. Your Fiat Loan Reference is <b>'.$reference.'</b>.';
+           $mailToLender = 'A loan request of <b>'.$currency.number_format($amount,2).'</b> from your offer with reference '.$offerExists->reference.'
+           has been approved and offer debited. New Available balance is <b>'.number_format($newOfferBalance,2).'</b>.
+           Fiat Loan Reference is <b>'.$reference.'</b>';
+           $mailToAdmin = 'A loan request of <b>'.$currency.number_format($amount,2).'</b> has been approved.
+           Fiat Loan Reference is <b>'.$reference.'</b>.';
 
-            event(new SendNotification($user,$mailToBorrower,'New Crypto Loan'));
-            event(new SendNotification($offerOwner,$mailToLender,'New Crypto Loan Request'));
+            event(new SendNotification($user,$mailToBorrower,'New Fiat Loan'));
+            event(new SendNotification($offerOwner,$mailToLender,'New Fiat Loan Request'));
 
-            event(new AdminNotification($mailToAdmin,'New Crypto Loan Request'));
+            event(new AdminNotification($mailToAdmin,'New Fiat Loan Request To Admin'));
 
             $success['credited']=true;
             return $this->sendResponse($success, 'Loan Credited');
         }else{
             return $this->sendError('Error validation', ['error' => 'Something went wrong. Please try again or contact support'],
+            '422', 'Validation Failed');
+        }
+    }
+    //view sent crypto loan details
+    public function sentCryptoLoanDetails($ref)
+    {
+        $web = GeneralSetting::where('id',1)->first();
+        $user  = Auth::user();
+        $loanExists = CryptoLoan::where('reference',$ref)->where('lender',$user->id)->first();
+        if (empty($loanExists)) {
+           return back()->with('error','Loan not found');
+        }
+        //get the user who made the offering available
+        $offerOwner = User::where('id',$loanExists->user)->first();
+        $viewData = [
+            'siteName'=>$web->siteName,
+            'pageName'=>'Loan Detail',
+            'web'=>$web,
+            'user'=>$user,
+            'loan'=>$loanExists,
+            'offerOwner'=>$offerOwner
+        ];
+        return view('dashboard.crypto_loan_details',$viewData);
+    }
+    //view borrowed crypto loan details
+    public function borrowedCryptoLoanDetails($ref)
+    {
+        $web = GeneralSetting::where('id',1)->first();
+        $user  = Auth::user();
+        $loanExists = CryptoLoan::where('reference',$ref)->where('user',$user->id)->first();
+        if (empty($loanExists)) {
+           return back()->with('error','Loan not found');
+        }
+        //get the user who made the offering available
+        $offerOwner = User::where('id',$loanExists->user)->first();
+        $viewData = [
+            'siteName'=>$web->siteName,
+            'pageName'=>'Loan Detail',
+            'web'=>$web,
+            'user'=>$user,
+            'loan'=>$loanExists,
+            'offerOwner'=>$offerOwner
+        ];
+        return view('dashboard.crypto_loan_details',$viewData);
+    }
+    //view sent Fiat Loans
+    public function sentFiatLoanDetails($ref)
+    {
+        $web = GeneralSetting::where('id',1)->first();
+        $user  = Auth::user();
+        $loanExists = FiatLoan::where('reference',$ref)->where('lender',$user->id)->first();
+        if (empty($loanExists)) {
+           return back()->with('error','Loan not found');
+        }
+        //get the user who made the loan available
+        $offerOwner = User::where('id',$loanExists->user)->first();
+        $coins = ($loanExists->acceptsAll ==1 ) ?
+        Coin::where('status',1)->get():
+        Coin::where('status',1)->where('asset',$loanExists->asset) ->get();
+        $viewData = [
+            'siteName'=>$web->siteName,
+            'pageName'=>'Fiat Loan Detail',
+            'web'=>$web,
+            'user'=>$user,
+            'loan'=>$loanExists,
+            'offerOwner'=>$offerOwner,
+            'coins' =>Coin::where('status',1)->get(),
+        ];
+        return view('dashboard.fiat_loan_details',$viewData);
+    }
+    //view sent Fiat Loans
+    public function borrowedFiatLoanDetails($ref)
+    {
+         $web = GeneralSetting::where('id',1)->first();
+         $user  = Auth::user();
+         $loanExists = FiatLoan::where('reference',$ref)->where('user',$user->id)->first();
+         if (empty($loanExists)) {
+            return back()->with('error','Loan not found');
+         }
+         //get the user who made the loan available
+         $offerOwner = User::where('id',$loanExists->user)->first();
+         $coins = ($loanExists->acceptsAll ==1 ) ?
+         Coin::where('status',1)->get():
+         Coin::where('status',1)->where('asset',$loanExists->asset) ->get();
+         $viewData = [
+             'siteName'=>$web->siteName,
+             'pageName'=>'Fiat Loan Detail',
+             'web'=>$web,
+             'user'=>$user,
+             'loan'=>$loanExists,
+             'offerOwner'=>$offerOwner,
+             'coins' =>Coin::where('status',1)->get(),
+         ];
+         return view('dashboard.fiat_loan_details',$viewData);
+    }
+    //repay borrwoed loan
+    public function repayLoan(Request $request)
+    {
+        $user = Auth::user();
+        $web = GeneralSetting::where('id',1)->first();
+        $validator = Validator::make($request->all(),
+            [
+                'id' => ['bail', 'required', 'numeric'],
+                'pin' => ['bail','required','numeric','digits:6'],
+            ],
+            ['required' => ':attribute is required'],
+            [
+                'id' => 'Loan Id',
+            ]
+        )->stopOnFirstFailure(true);
+        if ($validator->fails()) {
+            return $this->sendError('Error validation', ['error' => $validator->errors()->all()], '422', 'Validation Failed');
+        }
+        $input = $request->input();
+        //check if the pin is okay
+        $hashed = Hash::check($input['pin'],$user->transPin);
+        if (!$hashed) {
+            return $this->sendError('Error validation', ['error' => 'Invalid Account Pin'], '422', 'Validation Failed');
+        }
+        //get the loan here
+        $loanExists = FiatLoan::where('reference',$input['id'])->where('user',$user->id)->first();
+        if (empty($loanExists)) {
+            return $this->sendError('Error validation', ['error' => 'Unauthorized Action. Please contact support'],
+            '422', 'Validation Failed');
+        }
+        //lets check if this loan has been repaid
+        if ($loanExists->isPaid ==1) {
+            return $this->sendError('Error validation', ['error' => 'Double entry. Loan has been repaid already.'],
+            '422', 'Validation Failed');
+        }
+        //get the lender
+        $lender = User::where('id',$loanExists->lender)->first();
+        $lenderBalance = UserBalance::where('user',$lender->id)->where('currency',$loanExists->fiat)->first();
+        $userBalance = UserBalance::where('user',$user->id)->where('currency',$loanExists->fiat)->first();
+        $userTradingBalance = UserTradingBalance::where('asset',$loanExists->asset)->where('user',$user->id)->first();
+        $amount = $loanExists->fiatAmount+$loanExists->currentBill;
+        //check if the user's balance is up to the amount to payback
+        if ($userBalance->availableBalance < $amount) {
+            return $this->sendError('Error validation', ['error' => 'Insufficient account balance. Please topup your
+            '.$loanExists->fiat.' balance to proceed.'],
+            '422', 'Validation Failed');
+        }
+        $charge = $web->loanCharge/100*($loanExists->currentBill);
+        $currency= $loanExists->fiat;
+        $reference = $loanExists->reference;
+        $newLenderBalance = $lenderBalance->availableBalance+($amount-$charge);
+        $newUserBalance = $userBalance->availableBalance-$amount;
+        $newUserTradingBalance = $userTradingBalance->availableBalance+$loanExists->cryptoAmount;
+
+        //assemble data needed
+        $dataLoan=[
+            'isPaid'=>1,
+            'datePaidBack'=>time(),
+            'status'=>1
+        ];
+        $dataTradingBalance=[
+            'availableBalance'=>$newUserTradingBalance
+        ];
+        $dataUserBalance=[
+            'availableBalance'=>$newUserBalance
+        ];
+        $dataLenderBalance =[
+            'availableBalance'=>$newLenderBalance
+        ];
+        $dataCharge =[
+            'amount'=>$charge,
+            'currency'=>$loanExists->fiat,
+            'reference'=>$this->createUniqueRef('charges','reference'),
+            'user'=>$loanExists->lender,
+        ];
+        $updateLoan = FiatLoan::where('id',$loanExists->id)->update($dataLoan);
+        if ($updateLoan) {
+            //update the other data
+            UserBalance::where('id',$lenderBalance->id)->update($dataLenderBalance);
+            UserBalance::where('id',$userBalance->id)->update($dataUserBalance);
+            UserTradingBalance::where('id',$userTradingBalance->id)->update($dataTradingBalance);
+            Charge::create($dataCharge);
+            //send mail to the lender and the borrower notifying about this
+            $mailToBorrower = 'Your loan of <b>'.$currency.number_format($loanExists->fiatAmount,2).'</b> has been repaid and
+            your <b>'.$loanExists->asset.'</b> trading account refunded of your collateral.
+            Fiat Loan Reference is <b>'.$reference.'</b>.';
+
+           $mailToLender = 'A loan of <b>'.$currency.number_format($loanExists->fiatAmount,2).'</b> from your offer has just been repaid.
+           Your Available balance is <b>'.$currency.number_format($newLenderBalance,2).'</b>.
+           A charge of <b>'.$currency.$charge.'</b> was placed on the earned interest of this loan.<br>
+           Fiat Loan Reference is <b>'.$reference.'</b>';
+           $mailToAdmin = 'A loan request of <b>'.$currency.number_format($loanExists->fiatAmount,2).'</b> has been repaid.
+           Fiat Loan Reference is <b>'.$reference.'</b>.';
+
+            event(new SendNotification($user,$mailToBorrower,'Loan Repayment: Reference - '.$reference));
+            event(new SendNotification($lender,$mailToLender,'Loan Repayment Notification.  Reference- '.$reference));
+
+            event(new AdminNotification($mailToAdmin,'Loan Repayment Notification For Admin'));
+
+            $success['repaid']=true;
+            return $this->sendResponse($success, 'Loan Repaid');
+        }else{
+            return $this->sendError('Error validation', ['error' => 'Something went wrong. Please try again or contact
+            support about this.'],
             '422', 'Validation Failed');
         }
     }

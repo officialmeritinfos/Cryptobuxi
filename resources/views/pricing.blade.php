@@ -46,8 +46,8 @@
                                                 <ul class="pricing-table-ul">
                                                     <li><i class="fa fa-check-circle"></i>Minimum Term of {{$web->loanPeriodMin}}</li>
                                                     <li><i class="fa fa-check-circle"></i>Maximum Term of  {{$web->loanPeriodMax}}</li>
-                                                    <li><i class="fa fa-check-circle"></i>Minimum Interest of  {{$web->loanRoiMin}}%</li>
-                                                    <li><i class="fa fa-check-circle"></i>Maximum Interest of  {{$web->loanRoiMin}}%</li>
+                                                    <li><i class="fa fa-check-circle"></i>Minimum APR of  {{$web->loanRoiMin}}%</li>
+                                                    <li><i class="fa fa-check-circle"></i>Maximum APR of  {{$web->loanRoiMax}}%</li>
                                                 </ul>
                                             </div>
                                         </div>

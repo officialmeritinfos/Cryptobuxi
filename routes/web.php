@@ -7,6 +7,7 @@ use App\Http\Controllers\Web\Dashboard\Home;
 use App\Http\Controllers\Web\Dashboard\Loans;
 use App\Http\Controllers\Web\Dashboard\Referrals;
 use App\Http\Controllers\Web\Dashboard\Settings;
+use App\Http\Controllers\Web\Dashboard\Support;
 use App\Http\Controllers\Web\HomeController;
 use App\Http\Controllers\Web\Login;
 use App\Http\Controllers\Web\RecoverPassword;
@@ -43,6 +44,7 @@ Route::get('lending',[HomeController::class,'lending']);
 Route::get('peer',[HomeController::class,'peer']);
 Route::get('fiat_to_crypto/{crypto}/{fiat}/{amount}',[HomeController::class,'getFiatToCryptoRate']);
 Route::get('crypto_to_fiat/{crypto}/{fiat}/{amount}',[HomeController::class,'getCryptToFiatRate']);
+Route::get('get_fiat_loan_computation/{reference}/{duration}/{amount}',[HomeController::class,'computeFiatLoanReturns']);
 Route::middleware('checkCountry')->group(function(){
     Route::get('price',[HomeController::class,'pricing']);
 });
@@ -105,6 +107,19 @@ Route::middleware(['auth'])->group(function(){
         Route::post('loans/top_up_fiat_loan_offering',[Loans::class,'topUpFiatLoanOffering']);
         Route::post('loans/cancel_fiat_loan_offering',[Loans::class,'cancelFiatLoanOffering']);
         Route::post('loans/accept_fiat_loan_offering',[Loans::class,'acceptFiatLoanOffering']);
+        //This section of the loan route, allows user to view details of thier borrowed loans
+        Route::get('loans/sent/{ref}',[Loans::class,'sentCryptoLoanDetails']);
+        Route::get('loans/collected/{ref}',[Loans::class,'borrowedCryptoLoanDetails']);
+        Route::get('loans/fiat/sent/{ref}',[Loans::class,'sentFiatLoanDetails']);
+        Route::get('loans/fiat/collected/{ref}',[Loans::class,'borrowedFiatLoanDetails']);
+        Route::post('loans/repay_fiat_loan',[Loans::class,'repayLoan']);
+        /*=========== SUPPORT ROUTES =======================*/
+        Route::get('support',[Support::class,'index']);
+        Route::get('support/all',[Support::class,'allSupport']);
+        Route::post('support/create',[Support::class,'createNew']);
+        Route::get('support/{ref}/details',[Support::class,'ticketDetails']);
+        Route::post('support/reply',[Support::class,'replySupport']);
+        Route::get('support/close/{ref}',[Support::class,'closeTicket']);
 
     });
     //Logout Route
@@ -112,3 +127,6 @@ Route::middleware(['auth'])->group(function(){
 });
 Route::post('resetpassword',[RecoverPassword::class,'doReset']);
 Route::post('transactions/user/{customId}/account/{accountId}',[Transactions::class,'incoming']);
+
+//Check and compare dates
+Route::get('comparedates',[HomeController::class,'checkandCompareDates']);

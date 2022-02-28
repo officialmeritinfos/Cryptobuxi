@@ -7,8 +7,11 @@ use App\Http\Controllers\Api\BaseController;
 use App\Http\Controllers\Controller;
 use App\Models\Coin;
 use App\Models\CurrencyAccepted;
+use App\Models\FiatLoanOffering;
 use App\Models\GeneralSetting;
+use App\Models\Interval;
 use App\Models\TradingPair;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 
 class HomeController extends BaseController
@@ -305,5 +308,39 @@ class HomeController extends BaseController
         $success['fetched'] = true;
         $success['rate']=$rate;
         return $this->sendResponse($success, 'Fetched');
+    }
+    public function computeFiatLoanReturns($reference,$duration,$amount)
+    {
+       //check if the reference exists
+       $loanExists = FiatLoanOffering::where('reference',$reference)->first();
+       if (empty($loanExists)) {
+            return $this->sendError('validation Error ', ['error' => 'Invalid Loan Reference'], '404', 'Loan not found');
+       }
+       //get the interval
+       $interval = Interval::where('name',$loanExists->durationType)->first();
+       /** Well, since the APR is on a yearly basis, we will always divide by a year to
+        *  Get the daily supposed return, that will make up for the supposed
+        */
+        $amount = str_replace(',','',$amount);
+        $roi = $loanExists->apr;
+        $dailyRoi = $roi/365;
+        $totalRoiPercent = $dailyRoi*$duration*$interval->roi;
+        $payBackRoi = $totalRoiPercent/100;
+        $interest = $payBackRoi*$amount;
+        $paybackAmount = $interest+$amount;
+        $amount = number_format($paybackAmount,2);
+        $success['fetched'] = true;
+        $success['payback']=$amount;
+        return $this->sendResponse($success, 'Fetched');
+    }
+    public function checkandCompareDates()
+    {
+        $dt = '1648397314';
+        $dtN = time();
+        // $date = Carbon::now( 'Africa/Lagos');
+        $date= Carbon::createFromTimestamp($dt);
+        $dateNow= Carbon::createFromTimestamp($dtN);
+        $dateDiff = $dateNow->diffInDays($date);
+        echo $dateDiff;
     }
 }

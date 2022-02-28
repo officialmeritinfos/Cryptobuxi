@@ -11,7 +11,7 @@
             <div class="card-body text-center">
                 <div class="pro-user">
                     <h4 class="pro-user-username text-dark mb-1 font-weight-bold">{{$offerOwner->name}}</h4>
-                    <h6 class="pro-user-desc text-muted">{{$offerOwner->occupation}}r</h6>
+                    <h6 class="pro-user-desc text-muted">{{$offerOwner->occupation}}</h6>
                     <a href="{{url('account/trader/'.$offerOwner->userRef.'/details')}}" class="btn btn-primary btn-sm mt-3">View Portfolio</a>
                 </div>
             </div>
@@ -154,7 +154,7 @@
                 <h4 class="card-title text-center">Loan Offer Actions</h4><hr>
                 <div class="text-center">
                     @if ($user->id != $offering->user)
-                        <button class="btn btn-primary btn-sm" data-toggle="modal" data-target="#acceptCryptoLoanOffer"
+                        <button class="btn btn-primary btn-sm" data-toggle="modal" data-target="#acceptFiatLoanOffer"
                         >Accept Offer</button>
                     @endif
                     @if ($user->id == $offering->user)
