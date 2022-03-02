@@ -3,11 +3,13 @@
 use App\Http\Controllers\Transactions;
 use App\Http\Controllers\Web\Dashboard\AccountWallet;
 use App\Http\Controllers\Web\Dashboard\Activities;
+use App\Http\Controllers\Web\Dashboard\Beneficiary;
 use App\Http\Controllers\Web\Dashboard\Home;
 use App\Http\Controllers\Web\Dashboard\Loans;
 use App\Http\Controllers\Web\Dashboard\Referrals;
 use App\Http\Controllers\Web\Dashboard\Settings;
 use App\Http\Controllers\Web\Dashboard\Support;
+use App\Http\Controllers\Web\Dashboard\Trades;
 use App\Http\Controllers\Web\HomeController;
 use App\Http\Controllers\Web\Login;
 use App\Http\Controllers\Web\RecoverPassword;
@@ -120,6 +122,10 @@ Route::middleware(['auth'])->group(function(){
         Route::get('support/{ref}/details',[Support::class,'ticketDetails']);
         Route::post('support/reply',[Support::class,'replySupport']);
         Route::get('support/close/{ref}',[Support::class,'closeTicket']);
+        /*=========== USER BENEFICIARY ROUTES =======================*/
+        Route::get('beneficiary',[Beneficiary::class,'index']);
+        /*=========== USER BENEFICIARY ROUTES =======================*/
+        Route::get('trades',[Trades::class,'index']);
 
     });
     //Logout Route

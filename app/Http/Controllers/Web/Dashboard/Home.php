@@ -319,7 +319,7 @@ class Home extends BaseController
                 $this->sendToTradeAccount($input,$coinExists,$userBalance,$user,$request);
                 break;
             case '2':
-                return $this->sendToUser($input,$coinExists,$userBalance,$user, $request);
+                return $this->sendToUser($input,$coinExists,$userBalance,$user,$request);
                 break;
             default:
                 return $this->sendToExternalAddress($input,$coinExists,$userBalance,$user,$request);
@@ -422,7 +422,7 @@ class Home extends BaseController
         }
         return $this->sendError('Transfer Error', ['error' => 'Unable to process transfer request'], '422', 'transfer.failed');
     }
-    public function sendToUser($data,$coin,$balance,$user, $request)
+    public function sendToUser($data,$coin,$balance,$user,$request)
     {
         $generalSettings = GeneralSetting::where('id',1)->first();
         //validate the email
