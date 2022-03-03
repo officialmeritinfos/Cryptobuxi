@@ -2,37 +2,39 @@
 
 <!-- Row -->
 <div class="row">
-    <div class="col-xl-6 col-lg-6 col-md-12">
-        <div class="card box-widget widget-user">
-            <div class="widget-user-image mx-auto mt-5 text-center">
-                <img alt="User Avatar" class="rounded-circle"
-                     src="https://ui-avatars.com/api/?name={{$offerOwner->name}}&rounded=true&background=random">
-            </div>
-            <div class="card-body text-center">
-                <div class="pro-user">
-                    <h4 class="pro-user-username text-dark mb-1 font-weight-bold">{{$offerOwner->name}}</h4>
-                    <h6 class="pro-user-desc text-muted">{{$offerOwner->occupation}}</h6>
-                    <a href="{{url('account/trader/'.$offerOwner->userRef.'/details')}}" class="btn btn-primary btn-sm mt-3">View Portfolio</a>
+    @if($offerOwner->id != $user->id)
+        <div class="col-xl-6 col-lg-6 col-md-12">
+            <div class="card box-widget widget-user">
+                <div class="widget-user-image mx-auto mt-5 text-center">
+                    <img alt="User Avatar" class="rounded-circle"
+                         src="https://ui-avatars.com/api/?name={{$offerOwner->name}}&rounded=true&background=random">
                 </div>
-            </div>
-            <div class="card-footer p-0">
-                <div class="row">
-                    <div class="col-sm-6 border-right text-center">
-                        <div class="description-block p-4">
-                            <h5 class="description-header mb-1 font-weight-bold">{{$offerOwner->userLevel}}</h5>
-                            <span class="text-muted">Trader Level</span>
-                        </div>
+                <div class="card-body text-center">
+                    <div class="pro-user">
+                        <h4 class="pro-user-username text-dark mb-1 font-weight-bold">{{$offerOwner->name}}</h4>
+                        <h6 class="pro-user-desc text-muted">{{$offerOwner->occupation}}</h6>
+                        <a href="{{url('account/trader/'.$offerOwner->userRef.'/details')}}" class="btn btn-primary btn-sm mt-3">View Portfolio</a>
                     </div>
-                    <div class="col-sm-6">
-                        <div class="description-block text-center p-4">
-                            <h5 class="description-header mb-1 font-weight-bold">{{$offerOwner->country}}</h5>
-                            <span class="text-muted">Country</span>
+                </div>
+                <div class="card-footer p-0">
+                    <div class="row">
+                        <div class="col-sm-6 border-right text-center">
+                            <div class="description-block p-4">
+                                <h5 class="description-header mb-1 font-weight-bold">{{$offerOwner->userLevel}}</h5>
+                                <span class="text-muted">Trader Level</span>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="description-block text-center p-4">
+                                <h5 class="description-header mb-1 font-weight-bold">{{$offerOwner->country}}</h5>
+                                <span class="text-muted">Country</span>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
+    @endif
     @inject('options','App\Custom\Regular')
     <div class="col-xl-6 col-lg-6 col-md-12">
         <div class="card">
@@ -157,16 +159,24 @@
                                     @foreach($trades as $sale)
                                         <tr>
                                             <td>
-                                                <span class="badge badge-info break-text">
-                                                    <a href="{{url('account/trades/sale/'.$sale->reference)}}" >
-                                                        {{$sale->reference}}
-                                                    </a>
-                                                </span>
+                                                @if($sale->trader == $user->id)
+                                                    <span class="badge badge-warning break-text">
+                                                        <a href="{{url('account/trades/sale/'.$sale->reference)}}" >
+                                                            {{$sale->reference}}
+                                                        </a>
+                                                    </span>
+                                                @else
+                                                    <span class="badge badge-info break-text">
+                                                        <a href="{{url('account/trades/purchases/'.$sale->reference)}}" >
+                                                            {{$sale->reference}}
+                                                        </a>
+                                                    </span>
+                                                @endif
                                             </td>
                                             <td>{{$sale->asset}}</td>
                                             <td>{{$sale->amount}}</td>
                                             <td>{{$sale->currency}}</td>
-                                            <td>{{$sale->fiatAmount}}</td>
+                                            <td>{{number_format($sale->fiatAmount,2)}}</td>
                                             <td>{{$sale->created_at}}</td>
                                             <td>
                                                 @switch($sale->status)

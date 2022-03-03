@@ -6,9 +6,11 @@ use App\Custom\GenerateUnique;
 use App\Custom\Regular;
 use App\Custom\Wallet;
 use App\Events\AccountActivity;
+use App\Events\AdminNotification;
 use App\Events\SendNotification;
 use App\Http\Controllers\Api\BaseController;
 use App\Http\Controllers\Controller;
+use App\Models\Charge;
 use App\Models\Coin;
 use App\Models\CryptoLoan;
 use App\Models\CurrencyAccepted;
@@ -17,6 +19,8 @@ use App\Models\FiatLoanOffering;
 use App\Models\FiatLoanReserve;
 use App\Models\GeneralSetting;
 use App\Models\Interval;
+use App\Models\PendingTradeClearance;
+use App\Models\SystemAccount;
 use App\Models\Trade;
 use App\Models\TradeOffering;
 use App\Models\User;
@@ -206,7 +210,9 @@ class Trades extends BaseController
             'offering'=>$offerExists,
             'offerOwner'=>$offerOwner,
             'currency' =>$currency,
-            'trades'=>Trade::where('offerId',$offerExists->id)->where('status',1)->get(),
+            'trades'=>Trade::where('offerId',$offerExists->id)->where(function ($query){
+                return $query->orWhere('trader',Auth::user()->id)->orWhere('user',Auth::user()->id);
+            })->where('status',1)->get(),
             'coin'=>Coin::where('asset',$offerExists->asset)->first()
         ];
         return view('dashboard.trade_offer_details ',$viewData);
@@ -358,18 +364,19 @@ class Trades extends BaseController
         }
     }
     public  function buyTrade(Request $request){
+        $web = GeneralSetting::where('id',1)->first();
         $user = Auth::user();
         $validator = Validator::make($request->all(),
             [
                 'id' => ['bail', 'required', 'numeric'],
                 'amount' => ['bail', 'required', 'string'],
-                'details' => ['bail', 'nullable', 'string'],
+                'details' => ['bail', 'required', 'string'],
                 'pin' => ['bail','required','numeric','digits:6'],
             ],
             ['required' => ':attribute is required'],
             [
                 'percent' => 'Resale Rate',
-                'details' => 'To',
+                'details' => 'Destination Address',
             ]
         )->stopOnFirstFailure(true);
         if ($validator->fails()) {
@@ -404,6 +411,8 @@ class Trades extends BaseController
             account before proceeding.'],'422', 'Validation Failed');
         }
         $newBuyerBalance = $buyerBalance - $amount;
+        //get the seller
+        $seller = User::where('id',$offerExists->user)->first();
         //get the coin equivalence of the amount
         //First we get the trade offer rate
         $sellerRate = $this->regular->getTradeOfferrate($offerExists->id);
@@ -444,5 +453,183 @@ class Trades extends BaseController
         $offerData=[
             'availableBalance'=>$newOfferBalance
         ];
+        $reference = $this->createUniqueRef('trades','reference');
+        $paymentRef = $this->createUniqueRef('trades','paymentReference');
+        $dataTrade=[
+            'reference'=>$reference,'user'=>$user->id,'asset'=>$offerExists->asset,'amount'=>$coinAmount,
+            'fiatAmount'=>$amount,'currency'=>$currency,'offerId'=>$offerExists->id,'paymentReference'=>$paymentRef,
+            'trader'=>$offerExists->user,'charge'=>$charge,'amountCredited'=>$amountToTrader,'loanSettled'=>$amountToLender,
+            'hasLoan'=>$loanDat,'status'=>1
+        ];
+        //get the system account
+        $systemAccount = SystemAccount::where('asset',$coin)->first();
+
+        //add the data to database
+        $create = Trade::create($dataTrade);
+        if (!empty($create)){
+            //create withdrawal request
+            $dataWithdrawal =[
+                'user'=>$offerExists->user,'tradeId'=>$create->id,'amount'=>$coinAmount,'asset'=>$coin,'fiat'=>$currency,
+                'reference'=>$this->createUniqueRef('pending_trade_clearances','reference'),
+                'accountId'=>$systemAccount->accountId,'addressTo'=>$input['details']
+            ];
+            PendingTradeClearance::create($dataWithdrawal);
+            UserBalance::where('id',$buyerAccountBalance->id)->update($buyerBalanceData);
+            UserBalance::where('id',$sellerBalance->id)->update($sellerBalanceData);
+            TradeOffering::where('id',$offerExists->id)->update($offerData);
+            if ($loanDat==1){
+                $lender = User::where('id',$hasLoan->lender)->first();
+                $loanAmount = $hasLoan->amount;
+                $amountPaid = $hasLoan->amountPaidBack;
+                $amountLeft = $loanAmount -($amountPaid+$coinAmount);
+                $amountPaidBack = $hasLoan->amountPaidBack+$coinAmount;
+                if ($amountLeft <=0){
+                    $isPaidBack =1;
+                    $status = 1;
+                    $loanMessage ="Your trade resell of <b>".$hasLoan->amount.$coin."</b> of reference <b>".$hasLoan->reference."</b>
+                    has been fully repaid. A total of <b>".$currency.number_format($hasLoan->fiatTotal,2)."</b>
+                    was paid to you.";
+                    $debtorMessage ="Your crypto loan of <b>".$hasLoan->amount.$coin."</b> of reference <b>".$hasLoan->reference."</b>
+                    has been fully repaid. A total of <b>".$currency.number_format($hasLoan->fiatTotal,2)."</b>
+                    was paid to your creditor.";
+                }else{
+                    $isPaidBack =2;
+                    $status = 1;
+                    $loanMessage ="Your trade resell of reference <b>".$hasLoan->reference."</b> has returned a payment.
+                    A total of <b>".$currency.number_format($amountToLender,2)."</b>
+                    was paid to you.";
+                    $debtorMessage ="You just paid <b>".$currency.number_format($amountToLender,2)."</b> for the
+                    crypto loan with reference <b>".$hasLoan->reference."</b>.";
+                }
+                $dataLoan=[
+                    'isPaidBack'=>$isPaidBack,
+                    'status'=>$status,
+                    'amountPaidBack'=>$amountPaidBack,
+                    'amountLeft'=>$amountLeft,
+                    'fiatTotal'=>$hasLoan->fiatTotal+$amountToLender
+                ];
+                $lenderBalance = UserBalance::where('user',$hasLoan->lender)->where('currency',$currency)->first();
+                $newLenderBalance = $lenderBalance->availableBalance+$amountToLender;
+                $dataLenderBalance=[
+                    'availableBalance'=>$newLenderBalance
+                ];
+                //update the loan data and the lender balance
+                CryptoLoan::where('id',$hasLoan->id)->update($dataLoan);
+                UserBalance::where('id',$lenderBalance->id)->update($dataLenderBalance);
+                //send to the creditor
+                event(new SendNotification($user,$debtorMessage,'New Loan Payment'));
+                event(new SendNotification($lender,$loanMessage,'Loan Payment'));
+            }
+            //send a notification to the seller and to admin
+            $mailMessageToSeller = "A purchase of <b>".number_format($coinAmount,5).$coin."</b> just took
+            place on your listing with reference <b>".$offerExists->reference."</b>. Your Transaction Reference is
+            <b>".$reference."</b>.<br> Log into your ".config('app.name')." account to view more details.";
+            $mailMessageToBuyer = "Your purchase of <b>".number_format($coinAmount,5).$coin."</b> on
+            <b>".config('app.name')."</b> has been received. Your purchased asset should be on its way to your
+            destination wallet. Your Transaction Reference is <b>".$reference."</b>.<br>
+            Log into your ".config('app.name')." account to view more details.";
+            $mailMessageToAdmin = "A purchase of <b>".number_format($coinAmount,5).$coin."</b> on
+            <b>".config('app.name')."</b> has been received. Transaction Reference is <b>".$reference."</b>.<br>
+            Log into your ".config('app.name')." account to view more details.";
+            event(new SendNotification($seller,$mailMessageToSeller,'New '.$coin.' sale on '.config('app.name')));
+            event(new SendNotification($user,$mailMessageToBuyer,'New '.$coin.' purchase on '.config('app.name')));
+            event(new AdminNotification($mailMessageToAdmin,'Admin Mail: New '.$coin.' purchase on '.config('app.name')));
+
+            //process referral if any
+            $this->processReferral($charge,$seller,$user,$currency);
+
+            $success['purchased']=true;
+            return $this->sendResponse($success, 'Purchase successful');
+        }else{
+            return $this->sendError('Error validation', ['error' => 'Unable to place purchase. Please try
+            again, or use the generic purchase above, or contact support if problem
+            persists'],'422', 'Validation Failed');
+        }
+    }
+    public  function processReferral($charge,$seller,$user,$currency){
+        $web = GeneralSetting::where('id',1)->first();
+        //check if the buyer was referred
+        $buyerIsReferred = $user->refBy;
+        $sellerIsReferred = $seller->refBy;
+        $refBonus = $web->referralBonus/100;
+        $bonus = $refBonus*$charge;
+        if (!empty($buyerIsReferred)){
+            $dataBalance = [
+                'referralBalance'=>$bonus
+            ];
+            UserBalance::where('user',$user->id)->where('currency',$currency)->update($dataBalance);
+            $ref1=1;
+        }else{
+            $ref1=0;
+        }
+        if (!empty($sellerIsReferred)){
+            $dataBalance = [
+                'referralBalance'=>$bonus
+            ];
+            UserBalance::where('user',$seller->id)->where('currency',$currency)->update($dataBalance);
+            $ref2=1;
+        }else{
+            $ref2=0;
+        }
+        $refs = $ref1+$ref2;
+        $bonusCharge = $bonus*$refs;
+        $chargeEarned = $charge-$bonusCharge;
+
+        $dataCharge =[
+            'amount'=>$chargeEarned, 'reference'=>$this->createUniqueRef('charges','reference'),
+            'currency'=>$currency,'user'=>$user->id, 'status'=>1
+        ];
+        Charge::create($dataCharge);
+    }
+
+    public function saleDetails($ref)
+    {
+        $web = GeneralSetting::where('id',1)->first();
+        $user  = Auth::user();
+        $tradeExists = Trade::where('reference',$ref)->where('trader',$user->id) ->first();
+        if (empty($tradeExists)) {
+            return back()->with('error','Sales not found');
+        }
+        //get the user who made the loan available
+        $buyer = User::where('id',$tradeExists->user)->first();
+        $currency = CurrencyAccepted::where('status',1)->where('code',$tradeExists->currency) ->first();
+        $viewData = [
+            'siteName'=>$web->siteName,
+            'pageName'=>'Sales Details',
+            'web'=>$web,
+            'user'=>$user,
+            'trade'=>$tradeExists,
+            'buyer'=>$buyer,
+            'currency' =>$currency,
+            'coin'=>Coin::where('asset',$tradeExists->asset)->first(),
+            'offer'=>TradeOffering::where('id',$tradeExists->offerId)->first(),
+            'withdrawal'=>PendingTradeClearance::where('tradeId',$tradeExists->id)->first()
+        ];
+        return view('dashboard.trade_sale_details ',$viewData);
+    }
+    public function purchaseDetails($ref)
+    {
+        $web = GeneralSetting::where('id',1)->first();
+        $user  = Auth::user();
+        $tradeExists = Trade::where('reference',$ref)->where('user',$user->id) ->first();
+        if (empty($tradeExists)) {
+            return back()->with('error','Sales not found');
+        }
+        //get the user who made the loan available
+        $trader = User::where('id',$tradeExists->trader)->first();
+        $currency = CurrencyAccepted::where('status',1)->where('code',$tradeExists->currency) ->first();
+        $viewData = [
+            'siteName'=>$web->siteName,
+            'pageName'=>'Sales Details',
+            'web'=>$web,
+            'user'=>$user,
+            'trade'=>$tradeExists,
+            'trader'=>$trader,
+            'currency' =>$currency,
+            'coin'=>Coin::where('asset',$tradeExists->asset)->first(),
+            'offer'=>TradeOffering::where('id',$tradeExists->offerId)->first(),
+            'withdrawal'=>PendingTradeClearance::where('tradeId',$tradeExists->id)->first()
+        ];
+        return view('dashboard.trade_purchase_details ',$viewData);
     }
 }

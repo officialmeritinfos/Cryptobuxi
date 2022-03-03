@@ -134,6 +134,8 @@ Route::middleware(['auth'])->group(function(){
         Route::post('trades/top_up_offering',[Trades::class,'topUpOffer']);
         Route::post('trades/cancel_offering',[Trades::class,'cancelOffer']);
         Route::post('trades/buy',[Trades::class,'buyTrade']);
+        Route::get('trades/sale/{ref}',[Trades::class,'saleDetails']);
+        Route::get('trades/purchases/{ref}',[Trades::class,'purchaseDetails']);
 
     });
     //Logout Route

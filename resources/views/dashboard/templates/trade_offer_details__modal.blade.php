@@ -122,7 +122,7 @@
                     </button>
                 </div>
                 <div class="modal-body text-left p-4" >
-                    <form method="POST" id="accept_fiat_offer_forms" action="{{url('account/trades/buy')}}">
+                    <form method="POST" id="accept_fiat_offer_form" action="{{url('account/trades/buy')}}">
                         @csrf
                         <div class="row">
                             <div class="form-group col-md-6" style="display:none;">

@@ -85,7 +85,7 @@
                                             <td>{{$sale->asset}}</td>
                                             <td>{{$sale->amount}}</td>
                                             <td>{{$sale->currency}}</td>
-                                            <td>{{$sale->fiatAmount}}</td>
+                                            <td>{{number_format($sale->fiatAmount,2)}}</td>
                                             <td>{{$sale->created_at}}</td>
                                             <td>
                                                 @switch($sale->status)
@@ -147,7 +147,7 @@
                                                 <td>{{$purchase->asset}}</td>
                                                 <td>{{$purchase->amount}}</td>
                                                 <td>{{$purchase->currency}}</td>
-                                                <td>{{$purchase->fiatAmount}}</td>
+                                                <td>{{number_format($purchase->fiatAmount,2)}}</td>
                                                 <td>{{$purchase->created_at}}</td>
                                                 <td>
                                                     @switch($purchase->status)
