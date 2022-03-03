@@ -10,6 +10,7 @@ use App\Models\CurrencyAccepted;
 use App\Models\FiatLoanOffering;
 use App\Models\GeneralSetting;
 use App\Models\Interval;
+use App\Models\TradeOffering;
 use App\Models\TradingPair;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -342,5 +343,28 @@ class HomeController extends BaseController
         $dateNow= Carbon::createFromTimestamp($dtN);
         $dateDiff = $dateNow->diffInDays($date);
         echo $dateDiff;
+    }
+    public function getTradeOfferRate($reference,$amount){
+        $amount = str_replace(',','',$amount);
+        $offer=TradeOffering::where('reference',$reference)->first();
+        if (empty($offer)) {
+            return $this->sendError('validation Error ', ['error' => 'Invalid Offer Reference'], '404', 'Loan not found');
+        }
+        $userRate = $this->regular->getTradeOfferrate($offer->id);
+        $systemRate = $this->regular->getCryptoExchangeUserRate($offer->asset,$offer->currency,$userRate);
+        $rate = $amount/$systemRate;
+        $success['fetched'] = true;
+        $success['rate']=$rate;
+        return $this->sendResponse($success, 'Fetched');
+    }
+    public function calculateTradeFee($amount){
+        $amount = str_replace(',','',$amount);
+        $web = GeneralSetting::where('id',1)->first();
+        $charge = $web->tradeFee/100;
+        $charge = $charge*$amount;
+        $success['fetched'] = true;
+        $success['charge']=number_format($charge,2);
+        $success['amountToPay']=number_format($amount,2);
+        return $this->sendResponse($success, 'Fetched');
     }
 }

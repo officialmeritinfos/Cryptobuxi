@@ -47,6 +47,8 @@ Route::get('peer',[HomeController::class,'peer']);
 Route::get('fiat_to_crypto/{crypto}/{fiat}/{amount}',[HomeController::class,'getFiatToCryptoRate']);
 Route::get('crypto_to_fiat/{crypto}/{fiat}/{amount}',[HomeController::class,'getCryptToFiatRate']);
 Route::get('get_fiat_loan_computation/{reference}/{duration}/{amount}',[HomeController::class,'computeFiatLoanReturns']);
+Route::get('get_trade_offer_rate/{reference}/{amount}', [HomeController::class,'getTradeOfferRate']);
+Route::get('get_trade_fee/{amount}', [HomeController::class,'calculateTradeFee']);
 Route::middleware('checkCountry')->group(function(){
     Route::get('price',[HomeController::class,'pricing']);
 });
@@ -126,6 +128,12 @@ Route::middleware(['auth'])->group(function(){
         Route::get('beneficiary',[Beneficiary::class,'index']);
         /*=========== USER BENEFICIARY ROUTES =======================*/
         Route::get('trades',[Trades::class,'index']);
+        Route::get('trades/center',[Trades::class,'center']);
+        Route::post('trades/create_trade_offering',[Trades::class,'createOffer']);
+        Route::get('trades/center/{ref}/details',[Trades::class,'details']);
+        Route::post('trades/top_up_offering',[Trades::class,'topUpOffer']);
+        Route::post('trades/cancel_offering',[Trades::class,'cancelOffer']);
+        Route::post('trades/buy',[Trades::class,'buyTrade']);
 
     });
     //Logout Route

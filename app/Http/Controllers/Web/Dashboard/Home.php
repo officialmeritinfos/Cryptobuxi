@@ -15,6 +15,7 @@ use App\Http\Controllers\Api\BaseController;
 use App\Http\Controllers\Controller;
 use App\Models\Coin;
 use App\Models\Countries;
+use App\Models\CryptoLoan;
 use App\Models\CurrencyAccepted;
 use App\Models\GeneralSetting;
 use App\Models\PendingInternalTransfer;
@@ -350,6 +351,12 @@ class Home extends BaseController
             'pending'=>2,
             'reference'=>$data['reference']
         ];
+        //check if the user already has an unpaid loan
+        $hasLoan = CryptoLoan::where('user',$user->id)->where('asset',$coin->asset)->where('isPaidBack',2)->first();
+        if (!empty($hasLoan)){
+            return $this->sendError('Transfer Error', ['error' => 'You have an unpaid loan associated with this
+            trading account. Clear up your debt to proceed.'],'422', 'transfer.failed');
+        }
          //lets create the withdrawal
          $withdraw = Withdrawal::create($dataWithdrawal);
         if (!empty($withdraw)) {
@@ -374,7 +381,8 @@ class Home extends BaseController
             $success['sent']=true;
             return $this->sendResponse($success, 'Transfer sent; awaiting blockchain confirmations.');
         }
-        return $this->sendError('Transfer Error', ['error' => 'Unable to process transfer request'], '422', 'transfer.failed');
+        return $this->sendError('Transfer Error', ['error' => 'Unable to process transfer request'],
+            '422', 'transfer.failed');
     }
     public function sendToExternalAddress($data,$coin,$balance,$user,$request)
     {

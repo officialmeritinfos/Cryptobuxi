@@ -4,6 +4,8 @@ namespace App\Custom;
 use App\Models\Coin;
 use App\Models\Countries;
 use App\Models\CurrencyAccepted;
+use App\Models\GeneralSetting;
+use App\Models\TradeOffering;
 use App\Models\UserTradingBalance;
 use App\Models\Wallet;
 use Illuminate\Support\Facades\Cache;
@@ -119,6 +121,48 @@ class Regular{
     {
         $balance = Wallet::where('user',$user)->get();
         return $balance;
+    }
+    public function getTradeOfferrate($id)
+    {
+        $offer = TradeOffering::where('id',$id)->first();
+        $currency = CurrencyAccepted::where('code',$offer->currency)->first();
+        $systemRate = $currency->rateUsd;
+        $userRate = $offer->rate;
+        $rateAmount = $systemRate * ($userRate/100);
+        $amount = $systemRate+$rateAmount;
+        return $amount;
+    }
+    public function getCryptoExchangeRateTradeOffer($id,$amountSent)
+    {
+        $amount = $this->getTradeOfferrate($id);
+        $amounts = $amount*$amountSent;
+        return $amounts;
+    }
+    public function getCryptoExchangeUserRate($coin,$fiat=null,$userRate)
+    {
+        //set the coin as the cache
+        $key = strtoupper($coin);
+        $value= Cache::get($key);
+        if ($fiat === null) {
+            $values = $value;
+        }else{
+            $curr = strtoupper($fiat);
+            if ($curr == 'USD') {
+                $values = $value;
+            }else{
+                $rateUsd = $userRate;
+                $rate = $rateUsd*$value;
+                $values = $rate;
+            }
+        }
+        return $values;
+    }
+    public function calculateTradeFee($amount){
+        $amount = str_replace(',','',$amount);
+        $web = GeneralSetting::where('id',1)->first();
+        $charge = $web->tradeFee/100;
+        $charge = $charge*$amount;
+        return $charge;
     }
 }
 

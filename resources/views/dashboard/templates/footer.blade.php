@@ -675,6 +675,7 @@
         <script src="{{ asset('dashboard/account/dashboard.js')}}"></script>
         <script src="{{ asset('dashboard/account/settings.js')}}"></script>
         <script src="{{ asset('dashboard/account/loan.js')}}"></script>
+        <script src="{{ asset('dashboard/account/trades.js')}}"></script>
         <script src="https://kit.fontawesome.com/6b3c5ea29e.js" crossorigin="anonymous"></script>
         <!--<script>
             $(document).ready(() => {
